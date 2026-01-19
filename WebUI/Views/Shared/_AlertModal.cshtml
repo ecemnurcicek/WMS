@@ -1,0 +1,222 @@
+<!-- Ortak Uyarı Modal - Modern Tasarım -->
+<div class="modal fade" id="alertModal" tabindex="-1" aria-labelledby="alertModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" id="alertModalContent" style="border: none; border-radius: 15px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);">
+            <div class="modal-header" id="alertModalHeader" style="border: none; padding: 25px;">
+                <h5 class="modal-title" id="alertModalLabel" style="font-weight: 700; font-size: 1.3rem;">Bilgilendirme</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body" id="alertModalBody" style="padding: 0 25px 20px; font-size: 1rem;">
+                <p id="alertModalMessage" style="margin: 0;">Mesaj buraya gelecek</p>
+            </div>
+            <div class="modal-footer" id="alertModalFooter" style="border: none; padding: 0 25px 25px; gap: 10px;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="border-radius: 8px; font-weight: 600;">Kapat</button>
+                <button type="button" class="btn btn-primary" id="alertModalConfirmBtn" style="display: none; border-radius: 8px; font-weight: 600; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">Tamam</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Modern Modal Tasarımı - Login Ekranına Benzer */
+    
+    .modal-header.alert-error {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        border-bottom: 2px solid #f5c6cb;
+    }
+
+    .modal-header.alert-success {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        border-bottom: 2px solid #c3e6cb;
+    }
+
+    .modal-header.alert-info {
+        background: linear-gradient(135deg, #d1ecf1 0%, #bee5eb 100%);
+        border-bottom: 2px solid #bee5eb;
+    }
+
+    .modal-header.alert-warning {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        border-bottom: 2px solid #ffeaa7;
+    }
+
+    .modal-body.alert-error {
+        color: #721c24;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 10px;
+    }
+
+    .modal-body.alert-success {
+        color: #155724;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 10px;
+    }
+
+    .modal-body.alert-info {
+        color: #0c5460;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 10px;
+    }
+
+    .modal-body.alert-warning {
+        color: #856404;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 10px;
+    }
+
+    .alert-icon {
+        margin-right: 12px;
+        font-size: 1.3rem;
+        vertical-align: middle;
+    }
+
+    .modal-header.alert-error .alert-icon {
+        color: #721c24;
+    }
+
+    .modal-header.alert-success .alert-icon {
+        color: #155724;
+    }
+
+    .modal-header.alert-info .alert-icon {
+        color: #0c5460;
+    }
+
+    .modal-header.alert-warning .alert-icon {
+        color: #856404;
+    }
+
+    /* Button Animasyon */
+    .modal-footer .btn-secondary {
+        background-color: #e0e0e0;
+        border: 2px solid #e0e0e0;
+        color: #333;
+        transition: all 0.3s ease;
+    }
+
+    .modal-footer .btn-secondary:hover {
+        background-color: #d0d0d0;
+        border-color: #d0d0d0;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-footer .btn-primary {
+        transition: all 0.3s ease;
+    }
+
+    .modal-footer .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+</style>
+
+<script>
+    /**
+     * Ortak Modal Uyarı Sistemi
+     * Tip: 'success' | 'error' | 'info' | 'warning' | 'confirmation'
+     */
+    const AlertModal = {
+        // Modal elemanlarını saklayın
+        modal: null,
+        bootstrapModal: null,
+
+        // Başlatma
+        init: function () {
+            this.modal = document.getElementById('alertModal');
+            this.bootstrapModal = new bootstrap.Modal(this.modal);
+        },
+
+        // Hata mesajı göster
+        error: function (message, callback = null) {
+            this.show(message, 'error', 'Hata!', false, callback);
+        },
+
+        // Başarılı mesajı göster
+        success: function (message, callback = null) {
+            this.show(message, 'success', 'Başarılı!', false, callback);
+        },
+
+        // Bilgi mesajı göster
+        info: function (message, callback = null) {
+            this.show(message, 'info', 'Bilgilendirme', false, callback);
+        },
+
+        // Uyarı mesajı göster
+        warning: function (message, callback = null) {
+            this.show(message, 'warning', 'Uyarı!', false, callback);
+        },
+
+        // Onay mesajı göster (Tamam butonu göster)
+        confirm: function (message, title = 'Onay Gerekli', onConfirm = null) {
+            this.show(message, 'info', title, true, onConfirm);
+        },
+
+        // Ana show metodu
+        show: function (message, type = 'info', title = 'Bilgilendirme', showConfirmBtn = false, callback = null) {
+            // Başlık
+            const header = document.getElementById('alertModalHeader');
+            const label = document.getElementById('alertModalLabel');
+            label.textContent = title;
+
+            // Başlık ikon ve renk
+            const iconMap = {
+                'error': '<i class="fas fa-exclamation-circle alert-icon"></i>',
+                'success': '<i class="fas fa-check-circle alert-icon"></i>',
+                'info': '<i class="fas fa-info-circle alert-icon"></i>',
+                'warning': '<i class="fas fa-exclamation-triangle alert-icon"></i>'
+            };
+
+            header.className = 'modal-header alert-' + type;
+            label.innerHTML = (iconMap[type] || '') + title;
+
+            // Mesaj
+            const body = document.getElementById('alertModalBody');
+            body.className = 'modal-body alert-' + type;
+            document.getElementById('alertModalMessage').textContent = message;
+
+            // Tamam butonu
+            const confirmBtn = document.getElementById('alertModalConfirmBtn');
+            if (showConfirmBtn) {
+                confirmBtn.style.display = 'block';
+                confirmBtn.onclick = () => {
+                    this.bootstrapModal.hide();
+                    if (typeof callback === 'function') {
+                        callback(true);
+                    }
+                };
+            } else {
+                confirmBtn.style.display = 'none';
+            }
+
+            // Kapat butonuna callback ekle
+            const closeBtn = document.querySelector('#alertModal .btn-close');
+            const closeActionBtn = document.querySelector('#alertModal .btn-secondary');
+            
+            const handleClose = () => {
+                if (typeof callback === 'function' && !showConfirmBtn) {
+                    callback(false);
+                }
+            };
+
+            closeBtn.onclick = handleClose;
+            closeActionBtn.onclick = handleClose;
+
+            // Modalı göster
+            this.bootstrapModal.show();
+        }
+    };
+
+    // Sayfa yüklendikten sonra başlatın
+    document.addEventListener('DOMContentLoaded', function () {
+        AlertModal.init();
+    });
+</script>

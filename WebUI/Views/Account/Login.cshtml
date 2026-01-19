@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Giriş Yap";
+    Layout = "_Layout";
 }
 
 <link rel="stylesheet" href="~/css/login.css" />
@@ -53,7 +54,7 @@
                         </div>
                     }
 
-                    <form method="post" action="@Url.Action("Login", "Account")">
+                    <form id="loginForm" method="post" action="@Url.Action("Login", "Account")">
                         <div class="mb-4">
                             <label for="email" class="form-label">
                                 <i class="fas fa-envelope me-2" style="color: #667eea;"></i>Email Adresi
@@ -94,3 +95,69 @@
     </div>
 </div>
 
+<script>
+    // Form submit hataları işlemek için
+    const loginForm = document.getElementById('loginForm');
+    
+    // AlertModal'ın başlatılmasını bekle
+    function ensureAlertModalInitialized() {
+        return new Promise((resolve) => {
+            if (typeof AlertModal !== 'undefined' && AlertModal.bootstrapModal) {
+                resolve();
+            } else {
+                // AlertModal başlatılmadıysa, kendi oluştur
+                const checkInterval = setInterval(() => {
+                    if (typeof AlertModal !== 'undefined' && AlertModal.bootstrapModal) {
+                        clearInterval(checkInterval);
+                        resolve();
+                    }
+                }, 100);
+                // Maksimum 2 saniye bekle
+                setTimeout(() => clearInterval(checkInterval), 2000);
+            }
+        });
+    }
+    
+    loginForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        try {
+            const response = await fetch(this.action, {
+                method: 'POST',
+                body: new FormData(this)
+            });
+
+            // Eğer response başarılı değilse hata oluştur
+            if (!response.ok) {
+                // JSON hata response varsa işle
+                if (response.headers.get('content-type')?.includes('application/json')) {
+                    const error = await response.json();
+                    await ensureAlertModalInitialized();
+                    showErrorModal(error.message || error.error || 'Bir hata oluştu');
+                } else {
+                    await ensureAlertModalInitialized();
+                    showErrorModal('Giriş işlemi başarısız oldu. Lütfen tekrar deneyiniz.');
+                }
+                return;
+            }
+
+            // Başarılı yanıt
+            window.location.href = '@Url.Action("Index", "Dashboard")';
+        } catch (error) {
+            console.error('Login error:', error);
+            await ensureAlertModalInitialized();
+            showErrorModal('Giriş işlemi sırasında bir hata oluştu: ' + error.message);
+        }
+    });
+
+    // Modal gösterme fonksiyonu
+    function showErrorModal(message) {
+        // Eğer AlertModal başlatılmışsa kullan
+        if (typeof AlertModal !== 'undefined' && AlertModal.bootstrapModal) {
+            AlertModal.error(message);
+        } else {
+            // Fallback: basit alert
+            alert(message);
+        }
+    }
+</script>

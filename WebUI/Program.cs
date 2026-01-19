@@ -1,6 +1,8 @@
 using Business.Services;
+using Business.Managers;
 using Data.Context;
 using Microsoft.EntityFrameworkCore;
+using WebUI.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +25,10 @@ builder.Services.AddDbContext<ApplicationContext>(options =>
 
 // Add Business Services
 builder.Services.AddScoped<ILoginService, LoginService>();
+builder.Services.AddScoped<ILogService, LogService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IBusinessManager, BusinessManager>();
 
 var app = builder.Build();
 
@@ -38,6 +44,9 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
+
+// Add Exception Handling Middleware
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 // Add session middleware
 app.UseSession();

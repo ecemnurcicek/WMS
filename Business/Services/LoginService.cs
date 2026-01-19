@@ -1,65 +1,70 @@
 using Core.Dtos;
 using Data.Context;
+using Business.Exceptions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 
 namespace Business.Services;
 
 public class LoginService : ILoginService
 {
     private readonly ApplicationContext _context;
+    private readonly PasswordHasher<object> _passwordHasher;
 
     public LoginService(ApplicationContext context)
     {
         _context = context;
+        _passwordHasher = new PasswordHasher<object>();
     }
 
     public async Task<UserLoginResultDto> LoginAsync(LoginDto loginDto)
     {
-        var result = new UserLoginResultDto();
-
-        try
+        // Validasyon
+        if (string.IsNullOrWhiteSpace(loginDto.Email) || string.IsNullOrWhiteSpace(loginDto.Password))
         {
-            if (string.IsNullOrWhiteSpace(loginDto.Email) || string.IsNullOrWhiteSpace(loginDto.Password))
-            {
-                result.Success = false;
-                result.Message = "Email ve şifre gereklidir.";
-                return result;
-            }
-
-            var user = await _context.Users
-                .Include(u => u.UserRoles)
-                .ThenInclude(ur => ur.Role)
-                .FirstOrDefaultAsync(u => u.Email == loginDto.Email && u.IsActive);
-
-            if (user == null)
-            {
-                result.Success = false;
-                result.Message = "Geçersiz email veya şifre.";
-                return result;
-            }
-
-            // Password verification (should use proper hashing in production)
-            if (user.Password != loginDto.Password)
-            {
-                result.Success = false;
-                result.Message = "Geçersiz email veya şifre.";
-                return result;
-            }
-
-            result.Success = true;
-            result.Message = "Başarıyla giriş yapıldı.";
-            result.UserId = user.Id;
-            result.UserName = user.Name;
-            result.UserEmail = user.Email;
-            result.Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList();
-
-            return result;
+            throw new ValidationException(
+                "Email ve şifre gereklidir.",
+                nameof(LoginService),
+                25
+            );
         }
-        catch (Exception ex)
+
+        var user = await _context.Users
+            .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(u => u.Email == loginDto.Email && u.IsActive);
+
+        if (user == null)
         {
-            result.Success = false;
-            result.Message = $"Bir hata oluştu: {ex.Message}";
-            return result;
+            throw new NotFoundException(
+                "Geçersiz email veya şifre.",
+                nameof(LoginService),
+                35
+            );
         }
+
+        // Password verification using PasswordHasher
+        var result = _passwordHasher.VerifyHashedPassword(null, user.Password, loginDto.Password);
+        
+        if (result == PasswordVerificationResult.Failed)
+        {
+            throw new ValidationException(
+                "Geçersiz email veya şifre.",
+                nameof(LoginService),
+                43
+            );
+        }
+
+        var loginResult = new UserLoginResultDto
+        {
+            Success = true,
+            Message = "Başarıyla giriş yapıldı.",
+            UserId = user.Id,
+            UserName = user.Name,
+            UserEmail = user.Email,
+            Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList()
+        };
+
+        return loginResult;
     }
 }

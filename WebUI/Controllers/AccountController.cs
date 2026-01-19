@@ -7,11 +7,13 @@ namespace WebUI.Controllers
     public class AccountController : Controller
     {
         private readonly ILoginService _loginService;
+        private readonly ILogService _logService;
         private readonly ILogger<AccountController> _logger;
 
-        public AccountController(ILoginService loginService, ILogger<AccountController> logger)
+        public AccountController(ILoginService loginService, ILogService logService, ILogger<AccountController> logger)
         {
             _loginService = loginService;
+            _logService = logService;
             _logger = logger;
         }
 
@@ -29,29 +31,33 @@ namespace WebUI.Controllers
                 return View(loginDto);
             }
 
+            // Exception handling otomatik olarak ExceptionHandlingMiddleware tarafından yapılacak
             var result = await _loginService.LoginAsync(loginDto);
 
-            if (result.Success)
-            {
-                // Store user info in session
-                HttpContext.Session.SetInt32("UserId", result.UserId.Value);
-                HttpContext.Session.SetString("UserName", result.UserName);
-                HttpContext.Session.SetString("UserEmail", result.UserEmail);
-                HttpContext.Session.SetString("UserRoles", string.Join(",", result.Roles));
+            // Store user info in session
+            HttpContext.Session.SetInt32("UserId", result.UserId.Value);
+            HttpContext.Session.SetString("UserName", result.UserName);
+            HttpContext.Session.SetString("UserEmail", result.UserEmail);
+            HttpContext.Session.SetString("UserRoles", string.Join(",", result.Roles));
 
-                _logger.LogInformation($"Kullanıcı {result.UserEmail} başarıyla giriş yaptı.");
-                return RedirectToAction("Index", "Home");
-            }
-
-            ModelState.AddModelError("", result.Message);
-            _logger.LogWarning($"Başarısız giriş denemesi: {result.Message}");
-            return View(loginDto);
+            await _logService.LogInfoAsync($"Kullanıcı {result.UserEmail} başarıyla giriş yaptı.", nameof(AccountController), result.UserId);
+            _logger.LogInformation($"Kullanıcı {result.UserEmail} başarıyla giriş yaptı.");
+            return RedirectToAction("Index", "Dashboard");
         }
 
         [HttpGet]
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var userEmail = HttpContext.Session.GetString("UserEmail");
+            
             HttpContext.Session.Clear();
+            
+            if (userId.HasValue && !string.IsNullOrEmpty(userEmail))
+            {
+                await _logService.LogInfoAsync($"Kullanıcı {userEmail} çıkış yaptı.", nameof(AccountController), userId);
+            }
+            
             _logger.LogInformation("Kullanıcı çıkış yaptı.");
             return RedirectToAction("Index", "Home");
         }
