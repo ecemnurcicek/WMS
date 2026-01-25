@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Business.Service
+namespace Business.Services
 {
     public class TownService : ITownService
     {

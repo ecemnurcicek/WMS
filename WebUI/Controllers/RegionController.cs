@@ -1,18 +1,19 @@
 ﻿using Business.Interfaces;
 using Core.Dtos;
 using Microsoft.AspNetCore.Mvc;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 
 namespace WebUI.Controllers
 {
     public class RegionController : Controller
     {
-        private readonly IRegionService _regionService;
+        private readonly HttpClient _httpClient;
         private readonly IUserService _userService;
 
-        public RegionController(IRegionService regionService, IUserService userService)
+        public RegionController(IHttpClientFactory httpClientFactory, IUserService userService)
         {
-            _regionService = regionService;
+            _httpClient = httpClientFactory.CreateClient("WebAPI");
             _userService = userService;
         }
 
@@ -29,8 +30,12 @@ namespace WebUI.Controllers
             ViewData["UserName"] = user?.Name ?? "Kullanıcı";
             ViewData["UserEmail"] = user?.Email ?? "email@example.com";
 
-            var regions = await _regionService.GetAllAsync();
-            return View(regions);
+            var response = await _httpClient.GetAsync("/api/region");
+            if (!response.IsSuccessStatusCode)
+                return View(new List<RegionDto>());
+
+            var regions = await response.Content.ReadFromJsonAsync<IEnumerable<RegionDto>>();
+            return View(regions ?? new List<RegionDto>());
         }
 
         [HttpGet]
@@ -43,41 +48,54 @@ namespace WebUI.Controllers
         [HttpGet]
         public async Task<IActionResult> EditForm(int id)
         {
-            var region = await _regionService.GetByIdAsync(id);
-            if (region == null)
+            var response = await _httpClient.GetAsync($"/api/region/{id}");
+            if (!response.IsSuccessStatusCode)
                 return NotFound();
+
+            var region = await response.Content.ReadFromJsonAsync<RegionDto>();
             return PartialView("_FormModal", region);
         }
 
         [HttpGet]
         public async Task<IActionResult> DeleteConfirm(int id)
         {
-            var region = await _regionService.GetByIdAsync(id);
-            if (region == null)
+            var response = await _httpClient.GetAsync($"/api/region/{id}");
+            if (!response.IsSuccessStatusCode)
                 return NotFound();
+
+            var region = await response.Content.ReadFromJsonAsync<RegionDto>();
             return PartialView("_DeleteModal", region);
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateJson([FromForm] RegionDto dto)
         {
-            await _regionService.AddAsync(dto);
-            return Json(new { success = true, message = "Bölge başarıyla eklendi." });
+            var response = await _httpClient.PostAsJsonAsync("/api/region", dto);
+            if (response.IsSuccessStatusCode)
+                return Json(new { success = true, message = "Bölge başarıyla eklendi." });
+            
+            return Json(new { success = false, message = "Bir hata oluştu." });
         }
 
         [HttpPost]
         public async Task<IActionResult> Update(int id, [FromForm] RegionDto dto)
         {
             dto.Id = id;
-            await _regionService.UpdateAsync(dto);
-            return Json(new { success = true, message = "Bölge başarıyla güncellendi." });
+            var response = await _httpClient.PutAsJsonAsync($"/api/region/{id}", dto);
+            if (response.IsSuccessStatusCode)
+                return Json(new { success = true, message = "Bölge başarıyla güncellendi." });
+            
+            return Json(new { success = false, message = "Bir hata oluştu." });
         }
 
         [HttpPost]
         public async Task<IActionResult> DeleteJson(int id)
         {
-            await _regionService.DeleteAsync(id);
-            return Json(new { success = true, message = "Bölge başarıyla silindi." });
+            var response = await _httpClient.DeleteAsync($"/api/region/{id}");
+            if (response.IsSuccessStatusCode)
+                return Json(new { success = true, message = "Bölge başarıyla silindi." });
+            
+            return Json(new { success = false, message = "Bir hata oluştu." });
         }
     }
 }

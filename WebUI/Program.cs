@@ -31,6 +31,23 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IBusinessManager, BusinessManager>();
 builder.Services.AddScoped<IRegionService, RegionService>();
 
+// Add HttpClient for WebAPI communication
+var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7234";
+builder.Services.AddHttpClient("WebAPI", client =>
+{
+    client.BaseAddress = new Uri(apiBaseUrl);
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+})
+.ConfigurePrimaryHttpMessageHandler(() =>
+{
+    var handler = new HttpClientHandler();
+    if (!builder.Environment.IsProduction())
+    {
+        handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
+    }
+    return handler;
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
