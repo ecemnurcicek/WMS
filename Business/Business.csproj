@@ -9,7 +9,6 @@
   <ItemGroup>
     <Folder Include="Managers\" />
     <Folder Include="Rules\" />
-    <Folder Include="Services\" />
   </ItemGroup>
 
   <ItemGroup>

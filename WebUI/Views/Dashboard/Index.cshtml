@@ -2,200 +2,109 @@
 
 @{
     ViewData["Title"] = "Dashboard";
+    ViewData["UserName"] = Model.UserName;
+    ViewData["UserEmail"] = Model.UserEmail;
     Layout = "_Layout";
 }
 
 <link rel="stylesheet" href="~/css/dashboard.css" />
 
-<div class="dashboard-container">
-    <!-- Sidebar -->
-    <aside class="dashboard-sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-logo">
-                <i class="fas fa-warehouse"></i>
-                <span>WMS</span>
-            </div>
+<!-- Welcome Section -->
+<div class="welcome-section">
+    <div class="welcome-card">
+        <h2>Hoş Geldiniz, <span class="user-welcome">@Model.UserName</span>!</h2>
+        <p>WMS Yönetim Sistemi'ne geri hoş geldiniz. Son giriş zamanı: <span class="last-login">@Model.LastLoginTime.ToString("dd.MM.yyyy HH:mm:ss")</span></p>
+    </div>
+</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <!-- Total Products Card -->
+    <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+            <i class="fas fa-boxes"></i>
         </div>
-
-        <nav class="sidebar-nav">
-            <div class="nav-section">
-                <h5>Menu</h5>
-                <ul class="nav-list">
-                    <li class="nav-item active">
-                        <a href="#" class="nav-link">
-                            <i class="fas fa-th-large"></i>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="fas fa-boxes"></i>
-                            <span>Ürünler</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="fas fa-warehouse"></i>
-                            <span>Depo</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="fas fa-exchange-alt"></i>
-                            <span>Transferler</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="fas fa-chart-bar"></i>
-                            <span>Raporlar</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="nav-section">
-                <h5>Ayarlar</h5>
-                <ul class="nav-list">
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
-                            <i class="fas fa-cog"></i>
-                            <span>Sistem Ayarları</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="@Url.Action("Logout", "Account")" class="nav-link">
-                            <i class="fas fa-sign-out-alt"></i>
-                            <span>Çıkış Yap</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="dashboard-content">
-        <!-- Top Bar -->
-        <div class="dashboard-topbar">
-            <div class="topbar-left">
-                <button class="sidebar-toggle" id="sidebarToggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <h1 class="page-title">Dashboard</h1>
-            </div>
-
-            <div class="topbar-right">
-                <div class="user-profile">
-                    <div class="user-avatar">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="user-info">
-                        <p class="user-name">@Model.UserName</p>
-                        <p class="user-email">@Model.UserEmail</p>
-                    </div>
-                </div>
-            </div>
+        <div class="stat-content">
+            <h5>Toplam Ürünler</h5>
+            <p class="stat-value">@Model.TotalProducts</p>
+            <span class="stat-label">Sistem'de kayıtlı</span>
         </div>
+    </div>
 
-        <!-- Dashboard Content -->
-        <div class="dashboard-body">
-            <!-- Welcome Section -->
-            <div class="welcome-section">
-                <div class="welcome-card">
-                    <h2>Hoş Geldiniz, <span class="user-welcome">@Model.UserName</span>!</h2>
-                    <p>WMS Yönetim Sistemi'ne geri hoş geldiniz. Son giriş zamanı: <span class="last-login">@Model.LastLoginTime.ToString("dd.MM.yyyy HH:mm:ss")</span></p>
-                </div>
-            </div>
-
-            <!-- Stats Grid -->
-            <div class="stats-grid">
-                <!-- Total Products Card -->
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                        <i class="fas fa-boxes"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h5>Toplam Ürünler</h5>
-                        <p class="stat-value">@Model.TotalProducts</p>
-                        <span class="stat-label">Sistem'de kayıtlı</span>
-                    </div>
-                </div>
-
-                <!-- Total Warehouses Card -->
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                        <i class="fas fa-warehouse"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h5>Toplam Depolar</h5>
-                        <p class="stat-value">@Model.TotalWarehouses</p>
-                        <span class="stat-label">Aktif depo</span>
-                    </div>
-                </div>
-
-                <!-- Total Transfers Card -->
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                        <i class="fas fa-exchange-alt"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h5>Toplam Transferler</h5>
-                        <p class="stat-value">@Model.TotalTransfers</p>
-                        <span class="stat-label">Geçmiş ve aktif</span>
-                    </div>
-                </div>
-
-                <!-- Active Transfers Card -->
-                <div class="stat-card">
-                    <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
-                        <i class="fas fa-sync-alt"></i>
-                    </div>
-                    <div class="stat-content">
-                        <h5>Aktif Transferler</h5>
-                        <p class="stat-value">@Model.ActiveTransfers</p>
-                        <span class="stat-label">İşlemde olan</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- User Roles Section -->
-            <div class="roles-section">
-                <h3>Kullanıcı Yetkileriniz</h3>
-                <div class="roles-container">
-                    @foreach (var role in Model.Roles)
-                    {
-                        <span class="role-badge">
-                            <i class="fas fa-user-shield"></i> @role
-                        </span>
-                    }
-                </div>
-            </div>
-
-            <!-- Quick Actions -->
-            <div class="quick-actions">
-                <h3>Hızlı İşlemler</h3>
-                <div class="actions-grid">
-                    <button class="action-btn" onclick="showComingSoon('Yeni Ürün')">
-                        <i class="fas fa-plus-circle"></i>
-                        <span>Yeni Ürün</span>
-                    </button>
-                    <button class="action-btn" onclick="showComingSoon('Transfer Oluştur')">
-                        <i class="fas fa-arrow-right"></i>
-                        <span>Transfer Oluştur</span>
-                    </button>
-                    <button class="action-btn" onclick="showComingSoon('Stok Sorgula')">
-                        <i class="fas fa-search"></i>
-                        <span>Stok Sorgula</span>
-                    </button>
-                    <button class="action-btn" onclick="showComingSoon('Raporlar')">
-                        <i class="fas fa-file-pdf"></i>
-                        <span>Raporlar</span>
-                    </button>
-                </div>
-            </div>
+    <!-- Total Warehouses Card -->
+    <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+            <i class="fas fa-warehouse"></i>
         </div>
-    </main>
+        <div class="stat-content">
+            <h5>Toplam Depolar</h5>
+            <p class="stat-value">@Model.TotalWarehouses</p>
+            <span class="stat-label">Aktif depo</span>
+        </div>
+    </div>
+
+    <!-- Total Transfers Card -->
+    <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+            <i class="fas fa-exchange-alt"></i>
+        </div>
+        <div class="stat-content">
+            <h5>Toplam Transferler</h5>
+            <p class="stat-value">@Model.TotalTransfers</p>
+            <span class="stat-label">Geçmiş ve aktif</span>
+        </div>
+    </div>
+
+    <!-- Active Transfers Card -->
+    <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+            <i class="fas fa-sync-alt"></i>
+        </div>
+        <div class="stat-content">
+            <h5>Aktif Transferler</h5>
+            <p class="stat-value">@Model.ActiveTransfers</p>
+            <span class="stat-label">İşlemde olan</span>
+        </div>
+    </div>
+</div>
+
+<!-- User Roles Section -->
+<div class="roles-section">
+    <h3>Kullanıcı Yetkileriniz</h3>
+    <div class="roles-container">
+        @foreach (var role in Model.Roles)
+        {
+            <span class="role-badge">
+                <i class="fas fa-user-shield"></i> @role
+            </span>
+        }
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="quick-actions">
+    <h3>Hızlı İşlemler</h3>
+    <div class="actions-grid">
+        <button class="action-btn" onclick="showComingSoon('Yeni Ürün')">
+            <i class="fas fa-plus-circle"></i>
+            <span>Yeni Ürün</span>
+        </button>
+        <button class="action-btn" onclick="showComingSoon('Transfer Oluştur')">
+            <i class="fas fa-arrow-right"></i>
+            <span>Transfer Oluştur</span>
+        </button>
+        <button class="action-btn" onclick="showComingSoon('Stok Sorgula')">
+            <i class="fas fa-search"></i>
+            <span>Stok Sorgula</span>
+        </button>
+        <button class="action-btn" onclick="showComingSoon('Raporlar')">
+            <i class="fas fa-file-pdf"></i>
+            <span>Raporlar</span>
+        </button>
+    </div>
 </div>
 
 <script src="~/js/dashboard.js"></script>
+
+
+

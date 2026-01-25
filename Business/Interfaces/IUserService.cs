@@ -3,7 +3,7 @@ using Business.Repositories;
 using Core.Entities;
 using Data.Context;
 
-namespace Business.Services;
+namespace Business.Interfaces;
 
 /// <summary>
 /// User yönetimi servis interface

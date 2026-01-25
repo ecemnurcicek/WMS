@@ -1,6 +1,6 @@
 using Core.Dtos;
 
-namespace Business.Services;
+namespace Business.Interfaces;
 
 /// <summary>
 /// Dashboard işlemleri için service interface

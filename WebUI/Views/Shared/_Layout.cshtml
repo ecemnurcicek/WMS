@@ -10,9 +10,17 @@
     <link rel="stylesheet" href="~/WebUI.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <div class="container" style="height: 100%; padding: 0; margin: 0; max-width: 100%;">
-        <main role="main" class="pb-3" style="height: 100%; padding: 0;">
-            @RenderBody()
+    <div class="dashboard-container">
+        @await Html.PartialAsync("_Sidebar")
+
+        <main class="dashboard-content">
+            @await Html.PartialAsync("_Topbar")
+
+            <div class="dashboard-body">
+                @RenderBody()
+            </div>
+
+            @await Html.PartialAsync("_Footer")
         </main>
     </div>
 
@@ -25,3 +33,4 @@
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
+

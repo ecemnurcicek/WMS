@@ -1,6 +1,6 @@
 using Business.Exceptions;
 
-namespace Business.Services;
+namespace Business.Interfaces;
 
 /// <summary>
 /// Log kaydı işlemleri için interface

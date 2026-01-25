@@ -3,6 +3,7 @@ using Data.Context;
 using Business.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Business.Interfaces;
 
 namespace Business.Services;
 
@@ -21,7 +22,7 @@ public class LoginService : ILoginService
     {
         // Validasyon
         if (string.IsNullOrWhiteSpace(loginDto.Email) || string.IsNullOrWhiteSpace(loginDto.Password))
-        {
+        { 
             throw new ValidationException(
                 "Email ve şifre gereklidir.",
                 nameof(LoginService),
