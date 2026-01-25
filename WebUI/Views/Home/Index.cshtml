@@ -1,81 +1,75 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Ana Sayfa";
+    Layout = "~/Views/Shared/_LayoutPublic.cshtml";
 }
 
-<div class="text-center mt-5 mb-5">
-    <h1 class="display-4">
-        <i class="fas fa-warehouse me-3"></i>WMS Yönetim Sistemi
+<div class="hero-section">
+    <h1>
+        <i class="fas fa-warehouse me-2" style="color: #667eea;"></i>WMS Yönetim Sistemi
     </h1>
+    <p>Depo ve envanter yönetimini kolaylaştıran entegre bir platform</p>
 </div>
 
-<div class="container">
-    <div class="row g-4">
-        <div class="col-md-3">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <i class="fas fa-boxes fa-3x mb-3 text-primary"></i>
-                    <h5 class="card-title">Ürün Yönetimi</h5>
-                    <p class="card-text">Ürün envanterini kolayca yönetin ve izleyin.</p>
-                </div>
-            </div>
+<div class="feature-cards">
+    <div class="feature-card">
+        <div class="card-icon">
+            <i class="fas fa-boxes"></i>
         </div>
-        <div class="col-md-3">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <i class="fas fa-exchange-alt fa-3x mb-3 text-success"></i>
-                    <h5 class="card-title">Transfer İşlemleri</h5>
-                    <p class="card-text">Depolar arasında ürün transferini gerçekleştirin.</p>
-                </div>
-            </div>
+        <div class="card-body">
+            <h5 class="card-title">Ürün Yönetimi</h5>
+            <p class="card-text">Ürün envanterini kolayca yönetin ve izleyin. Tüm ürünlerinizin detaylı bilgilerini kaydedin.</p>
         </div>
-        <div class="col-md-3">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <i class="fas fa-chart-bar fa-3x mb-3 text-info"></i>
-                    <h5 class="card-title">Raporlar</h5>
-                    <p class="card-text">Sistem raporlarını ve analizlerini görüntüleyin.</p>
-                </div>
-            </div>
+    </div>
+
+    <div class="feature-card">
+        <div class="card-icon">
+            <i class="fas fa-exchange-alt"></i>
         </div>
-        <div class="col-md-3">
-            <div class="card h-100">
-                <div class="card-body text-center">
-                    <i class="fas fa-magnifying-glass fa-3x mb-3 text-warning"></i>
-                    <h5 class="card-title">Stok Sorgulama</h5>
-                    <p class="card-text">Ürün stok bilgilerini kolayca sorgulayın.</p>
-                </div>
-            </div>
+        <div class="card-body">
+            <h5 class="card-title">Transfer İşlemleri</h5>
+            <p class="card-text">Depolar arasında ürün transferini gerçekleştirin. Transfer işlemlerini kolaylıkla yönetin.</p>
+        </div>
+    </div>
+
+    <div class="feature-card">
+        <div class="card-icon">
+            <i class="fas fa-chart-bar"></i>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">Raporlar</h5>
+            <p class="card-text">Sistem raporlarını ve analizlerini görüntüleyin. Detaylı istatistiklere erişin.</p>
+        </div>
+    </div>
+
+    <div class="feature-card">
+        <div class="card-icon">
+            <i class="fas fa-magnifying-glass"></i>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">Stok Sorgulama</h5>
+            <p class="card-text">Ürün stok bilgilerini kolayca sorgulayın. Gerçek zamanlı stok durumunu görün.</p>
         </div>
     </div>
 </div>
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-12">
-            <div class="card border-2 border-primary shadow-lg" style="border-radius: 12px;">
-                <div class="card-body p-5">
-                    <h5 class="card-title text-primary mb-4">
-                        <i class="fas fa-barcode me-2"></i>Hızlı Ürün Arama
-                    </h5>
-                    <form class="d-flex gap-2">
-                        <input type="text" class="form-control form-control-lg" placeholder="Ürün kodu veya barkod (EAN) girin..." />
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fas fa-search me-2"></i>Ara
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
+<div class="search-section">
+    <div class="search-card">
+        <h5>
+            <i class="fas fa-barcode me-2"></i>Hızlı Ürün Arama
+        </h5>
+        <form class="search-form" method="get" action="@Url.Action("Search", "Product")">
+            <input type="text" class="form-control form-control-lg" name="query" placeholder="Ürün kodu veya barkod (EAN) girin..." />
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-search me-2"></i>Ara
+            </button>
+        </form>
     </div>
 </div>
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-12">
-            <div class="alert alert-info alert-dismissible fade show" role="alert" style="border-radius: 12px;">
-                <i class="fas fa-lock me-2"></i>
-                <strong>Yönetici misiniz?</strong> Sistem ayarlarını yönetmek için <a href="@Url.Action("Login", "Account")" class="alert-link">buraya tıklayın</a> ve giriş yapın.
-            </div>
-        </div>
+<div class="info-section">
+    <div class="alert alert-info alert-dismissible fade show mb-0" role="alert">
+        <i class="fas fa-info-circle me-2"></i>
+        <strong>Hoş Geldiniz!</strong> WMS Yönetim Sistemi'ne giriş yapmış olursanız ürün ve depo yönetimi için daha fazla özelliğe erişebilirsiniz.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 </div>

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="utf-8" />
@@ -9,20 +9,8 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/WebUI.styles.css" asp-append-version="true" />
 </head>
-<body>
-    <div class="dashboard-container">
-        @await Html.PartialAsync("_Sidebar")
-
-        <main class="dashboard-content">
-            @await Html.PartialAsync("_Topbar")
-
-            <div class="dashboard-body">
-                @RenderBody()
-            </div>
-
-            @await Html.PartialAsync("_Footer")
-        </main>
-    </div>
+<body class="login-body">
+    @RenderBody()
 
     <!-- Ortak Alert Modal -->
     @await Html.PartialAsync("_AlertModal")
@@ -33,4 +21,3 @@
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
-
