@@ -18,10 +18,9 @@ namespace Business.Services
             _context = context;
         }
 
-        public async Task<List<RegionDto>> GetAllAsync()
+        public async Task<List<RegionDto>> GetAllAsync(bool pActive)
         {
             var list = await _context.Regions
-                                 .Where(r => r.IsActive)
                                  .Select(r => new RegionDto
                                  {
                                      Id = r.Id,
@@ -29,13 +28,18 @@ namespace Business.Services
                                      IsActive = r.IsActive
                                  })
                                  .ToListAsync();
+            
+            //Eğer kullanıcı rolünde ise sadece aktif olanları getirir.
+            if (pActive)
+                list = list.Where(r => r.IsActive).ToList();
+
             return list;
         }
 
         public async Task<RegionDto?> GetByIdAsync(int pId)
         {
             var region = await _context.Regions.FindAsync(pId);
-            if (region == null || !region.IsActive) return null;
+            if (region == null) return null;
 
             var item = new RegionDto
             {

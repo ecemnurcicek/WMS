@@ -8,13 +8,35 @@ namespace WebUI.Controllers
     public class CityController : Controller
     {
         private readonly ICityService _cityService;
+        private readonly IUserService _userService;
+        private readonly ILogger<CityController> _logger;
 
-        public CityController(ICityService cityService)
+        public CityController(ICityService cityService, IUserService userService, ILogger<CityController> logger)
         {
             _cityService = cityService;
+            _userService = userService;
+            _logger = logger;
         }
         public async Task<IActionResult> Index()
         {
+            // Set user info in ViewData
+            var userIdObj = HttpContext.Session.GetInt32("UserId");
+            if (userIdObj.HasValue)
+            {
+                try
+                {
+                    var user = await _userService.GetUserByIdAsync(userIdObj.Value);
+                    ViewData["UserName"] = user?.Name ?? "Kullanıcı";
+                    ViewData["UserEmail"] = user?.Email ?? "email@example.com";
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Kullanıcı bilgisi getirilirken hata oluştu");
+                    ViewData["UserName"] = "Kullanıcı";
+                    ViewData["UserEmail"] = "email@example.com";
+                }
+            }
+
             var cities = await _cityService.GetAllAsync();
             return View(cities);
         }

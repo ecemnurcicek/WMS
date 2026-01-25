@@ -1,0 +1,80 @@
+﻿@model IEnumerable<Core.Dtos.RegionDto>
+
+@{
+    ViewData["Title"] = "Bölge Yönetimi";
+    Layout = "_Layout";
+}
+
+<link rel="stylesheet" href="~/css/region.css" asp-append-version="true" />
+<script src="~/js/region.js" asp-append-version="true"></script>
+
+<div class="region-container">
+    <!-- Header -->
+    <div class="region-header">
+        <h1 class="page-heading">
+            <i class="fas fa-mountain me-3"></i>Bölge Yönetimi
+        </h1>
+        <button class="btn btn-primary" id="btnAddRegion">
+            <i class="fas fa-plus me-2"></i>Yeni Bölge Ekle
+        </button>
+    </div>
+
+    <!-- Regions Table -->
+    <div class="region-table-wrapper">
+        @if (Model.Any())
+        {
+            <table class="table table-hover region-table">
+                <thead class="table-header-style">
+                    <tr>
+                        <th>#</th>
+                        <th>Bölge Adı</th>
+                        <th>Durum</th>
+                        <th class="action-column">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var region in Model)
+                    {
+                        <tr data-region-id="@region.Id">
+                            <td>@region.Id</td>
+                            <td class="region-name">@region.Name</td>
+                            <td>
+                                @if (region.IsActive)
+                                {
+                                    <span class="badge bg-success">Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Pasif</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn btn-edit btn-sm" onclick="editRegion(@region.Id)">
+                                        <i class="fas fa-edit"></i> Düzenle
+                                    </button>
+                                    <button class="btn btn-delete btn-sm" onclick="deleteRegion(@region.Id)">
+                                        <i class="fas fa-trash"></i> Sil
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>Henüz bölge eklenmemiştir</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Form Modal Container -->
+<div id="formModalContainer"></div>
+
+<!-- Delete Modal Container -->
+<div id="deleteModalContainer"></div>

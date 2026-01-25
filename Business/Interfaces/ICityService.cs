@@ -13,7 +13,6 @@ namespace Business.Interfaces
         Task<List<CityDto>> GetAllAsync();
         Task<CityDto?> GetByIdAsync(int id);
         Task<List<CityDto>> GetByRegionIdAsync(int regionId);
-
         Task<CityDto> AddAsync(CityDto dto);   
         Task<CityDto> UpdateAsync(CityDto dto);
         Task<bool> DeleteAsync(int id);

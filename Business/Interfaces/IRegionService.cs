@@ -13,7 +13,7 @@ namespace Business.Interfaces
         /// Bu metod bütün bölgeleri getirir.
         /// </summary>
         /// <returns></returns>
-        Task<List<RegionDto>> GetAllAsync();
+        Task<List<RegionDto>> GetAllAsync(bool pActive = false);
 
         /// <summary>
         /// Bu metod sadece seçili bölgeyi getirir.

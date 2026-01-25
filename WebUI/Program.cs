@@ -4,7 +4,6 @@ using Data.Context;
 using Microsoft.EntityFrameworkCore;
 using WebUI.Middleware;
 using Business.Interfaces;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -30,6 +29,7 @@ builder.Services.AddScoped<ILogService, LogService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IBusinessManager, BusinessManager>();
+builder.Services.AddScoped<IRegionService, RegionService>();
 
 var app = builder.Build();
 

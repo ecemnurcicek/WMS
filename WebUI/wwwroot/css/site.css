@@ -211,8 +211,9 @@ body {
 /* Dashboard Body */
 .dashboard-body {
   flex: 1;
-  padding: 30px;
+  padding: 30px 30px 30px 310px;
   overflow-y: auto;
+  max-width: 100%;
 }
 
 /* Card Styles */
@@ -255,6 +256,10 @@ body {
 
   .dashboard-content {
     margin-left: 0;
+  }
+
+  .dashboard-body {
+    padding: 30px 30px 30px 30px !important;
   }
 
   .dashboard-topbar {
