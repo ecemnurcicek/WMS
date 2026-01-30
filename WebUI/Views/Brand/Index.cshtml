@@ -1,0 +1,80 @@
+@model IEnumerable<Core.Dtos.BrandDto>
+
+@{
+    ViewData["Title"] = "Marka Yönetimi";
+    Layout = "_Layout";
+}
+
+<link rel="stylesheet" href="~/css/brand.css" asp-append-version="true" />
+<script src="~/js/brand.js" asp-append-version="true"></script>
+
+<div class="brand-container">
+    <!-- Header -->
+    <div class="brand-header">
+        <h1 class="page-heading">
+            <i class="fas fa-tags me-3"></i>Marka Yönetimi
+        </h1>
+        <button class="btn btn-primary" id="btnAddBrand">
+            <i class="fas fa-plus me-2"></i>Yeni Marka Ekle
+        </button>
+    </div>
+
+    <!-- Brands Table -->
+    <div class="brand-table-wrapper">
+        @if (Model.Any())
+        {
+            <table class="table table-hover brand-table">
+                <thead class="table-header-style">
+                    <tr>
+                        <th>#</th>
+                        <th>Marka Adı</th>
+                        <th>Durum</th>
+                        <th class="action-column">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var brand in Model)
+                    {
+                        <tr data-brand-id="@brand.Id">
+                            <td>@brand.Id</td>
+                            <td class="brand-name">@brand.Name</td>
+                            <td>
+                                @if (brand.IsActive)
+                                {
+                                    <span class="badge bg-success">Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Pasif</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn btn-edit btn-sm" onclick="editBrand(@brand.Id)">
+                                        <i class="fas fa-edit"></i> Düzenle
+                                    </button>
+                                    <button class="btn btn-delete btn-sm" onclick="deleteBrand(@brand.Id)">
+                                        <i class="fas fa-trash"></i> Sil
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>Henüz marka eklenmemiştir</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Form Modal Container -->
+<div id="formModalContainer"></div>
+
+<!-- Delete Modal Container -->
+<div id="deleteModalContainer"></div>

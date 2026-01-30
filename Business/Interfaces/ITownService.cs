@@ -8,6 +8,7 @@ namespace Business.Interfaces
     {
         Task<List<TownDto>> GetAllAsync(bool pActive = false);
         Task<TownDto?> GetByIdAsync(int pId);
+        Task<List<TownDto>> GetByCityIdAsync(int cityId);
 
         Task<TownDto> AddAsync(TownDto pModel);
         Task<bool> UpdateAsync(TownDto pModel);

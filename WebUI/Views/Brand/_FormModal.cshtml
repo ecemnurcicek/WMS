@@ -1,0 +1,54 @@
+@model Core.Dtos.BrandDto
+
+<!-- Form Modal -->
+<div class="modal fade" id="formModal" tabindex="-1" aria-labelledby="formModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="formModalTitle">
+                    @if (Model?.Id > 0)
+                    {
+                        <text><i class="fas fa-edit me-2"></i>Markayı Düzenle</text>
+                    }
+                    else
+                    {
+                        <text><i class="fas fa-plus me-2"></i>Yeni Marka Ekle</text>
+                    }
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="brandForm">
+                <div class="modal-body">
+                    <input type="hidden" id="brandId" name="Id" value="@(Model?.Id ?? 0)" />
+                    
+                    <div class="form-group mb-3">
+                        <label for="brandName">Marka Adı <span style="color: #dc3545;">*</span></label>
+                        <input type="text" id="brandName" name="Name" class="form-control" placeholder="Marka adını girin" value="@(Model?.Name ?? string.Empty)" required>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input type="checkbox" id="brandIsActive" name="IsActive" class="form-check-input" @(Model?.IsActive == true ? "checked" : "")>
+                            <label class="form-check-label" for="brandIsActive">
+                                Aktif
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary" id="submitButton">
+                        @if (Model?.Id > 0)
+                        {
+                            <text>Güncelle</text>
+                        }
+                        else
+                        {
+                            <text>Ekle</text>
+                        }
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

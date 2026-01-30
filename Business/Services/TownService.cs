@@ -22,16 +22,20 @@ namespace Business.Services
         public async Task<List<TownDto>> GetAllAsync(bool pActive = false)
         {
             var list = await _context.Towns
+                .Include(t => t.City)
+                    .ThenInclude(c => c!.Region)
                 .Select(t => new TownDto
                 {
                     Id = t.Id,
                     Name = t.Name,
                     CityId = t.CityId,
+                    CityName = t.City != null ? t.City.CityName : null,
+                    RegionId = t.City != null ? t.City.RegionId : 0,
+                    RegionName = t.City != null && t.City.Region != null ? t.City.Region.RegionName : null,
                     IsActive = t.IsActive
                 })
                 .ToListAsync();
 
-            // RegionService birebir davranış
             if (pActive)
                 list = list.Where(t => t.IsActive).ToList();
 
@@ -40,7 +44,11 @@ namespace Business.Services
 
         public async Task<TownDto?> GetByIdAsync(int pId)
         {
-            var town = await _context.Towns.FindAsync(pId);
+            var town = await _context.Towns
+                .Include(t => t.City)
+                    .ThenInclude(c => c!.Region)
+                .FirstOrDefaultAsync(t => t.Id == pId);
+
             if (town == null)
                 return null;
 
@@ -49,8 +57,30 @@ namespace Business.Services
                 Id = town.Id,
                 Name = town.Name,
                 CityId = town.CityId,
+                CityName = town.City?.CityName,
+                RegionId = town.City?.RegionId ?? 0,
+                RegionName = town.City?.Region?.RegionName,
                 IsActive = town.IsActive
             };
+        }
+
+        public async Task<List<TownDto>> GetByCityIdAsync(int cityId)
+        {
+            return await _context.Towns
+                .Include(t => t.City)
+                    .ThenInclude(c => c!.Region)
+                .Where(t => t.CityId == cityId && t.IsActive)
+                .Select(t => new TownDto
+                {
+                    Id = t.Id,
+                    Name = t.Name,
+                    CityId = t.CityId,
+                    CityName = t.City != null ? t.City.CityName : null,
+                    RegionId = t.City != null ? t.City.RegionId : 0,
+                    RegionName = t.City != null && t.City.Region != null ? t.City.Region.RegionName : null,
+                    IsActive = t.IsActive
+                })
+                .ToListAsync();
         }
 
         public async Task<TownDto> AddAsync(TownDto pModel)
