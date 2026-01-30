@@ -22,6 +22,27 @@ namespace Core.Dtos
         public int UpdateBy { get; set; }
         public bool IsActive { get; set; }
     }
+
+    public class ProductDetailDto
+    {
+       
+        public int Id { get; set; }
+        public string Model { get; set; } = null!;
+        public string Color { get; set; } = null!;
+        public string Size { get; set; } = null!;
+        public decimal Price { get; set; }
+        public string Ean { get; set; } = null!;
+        public string? CoverUrl { get; set; }
+        public string? Description { get; set; }
+        public bool IsActive { get; set; }
+
+        
+        public int BrandId { get; set; }
+        public string BrandName { get; set; } = null!;
+
+        
+        public List<ProductShelfDetailDto> Shelves { get; set; } = new();
+    }
 }
 
 

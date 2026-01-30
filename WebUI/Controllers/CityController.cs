@@ -1,83 +1,130 @@
 ﻿using Business.Interfaces;
 using Core.Dtos;
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
+using System.Net.Http.Json;
 
 namespace WebUI.Controllers
 {
     public class CityController : Controller
     {
-        private readonly ICityService _cityService;
+        private readonly HttpClient _httpClient;
         private readonly IUserService _userService;
-        private readonly ILogger<CityController> _logger;
 
-        public CityController(ICityService cityService, IUserService userService, ILogger<CityController> logger)
+        public CityController(IHttpClientFactory httpClientFactory, IUserService userService)
         {
-            _cityService = cityService;
+            _httpClient = httpClientFactory.CreateClient("WebAPI");
             _userService = userService;
-            _logger = logger;
         }
+
         public async Task<IActionResult> Index()
         {
-            // Set user info in ViewData
             var userIdObj = HttpContext.Session.GetInt32("UserId");
-            if (userIdObj.HasValue)
+            if (!userIdObj.HasValue)
+                return RedirectToAction("Login", "Account");
+
+            var user = await _userService.GetUserByIdAsync(userIdObj.Value);
+
+            ViewData["Title"] = "Şehir Yönetimi";
+            ViewData["UserName"] = user?.Name ?? "Kullanıcı";
+            ViewData["UserEmail"] = user?.Email ?? "email@example.com";
+
+            var cityResponse = await _httpClient.GetAsync("/api/city");
+            if (!cityResponse.IsSuccessStatusCode)
+                return View(new List<CityDto>());
+
+            var cities = await cityResponse.Content.ReadFromJsonAsync<IEnumerable<CityDto>>();
+
+            var regionResponse = await _httpClient.GetAsync("/api/region");
+            if (regionResponse.IsSuccessStatusCode)
             {
-                try
-                {
-                    var user = await _userService.GetUserByIdAsync(userIdObj.Value);
-                    ViewData["UserName"] = user?.Name ?? "Kullanıcı";
-                    ViewData["UserEmail"] = user?.Email ?? "email@example.com";
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Kullanıcı bilgisi getirilirken hata oluştu");
-                    ViewData["UserName"] = "Kullanıcı";
-                    ViewData["UserEmail"] = "email@example.com";
-                }
+                var regions = await regionResponse.Content.ReadFromJsonAsync<IEnumerable<RegionDto>>();
+                ViewBag.Regions = regions ?? new List<RegionDto>();
             }
 
-            var cities = await _cityService.GetAllAsync();
-            return View(cities);
+            return View(cities ?? new List<CityDto>());
         }
-        public IActionResult Create()
+
+        [HttpGet]
+        public async Task<IActionResult> CreateForm()
         {
-            return View();
+            var regionResponse = await _httpClient.GetAsync("/api/region");
+            var regions = regionResponse.IsSuccessStatusCode
+                ? await regionResponse.Content.ReadFromJsonAsync<IEnumerable<RegionDto>>()
+                : new List<RegionDto>();
+
+            ViewBag.Regions = regions;
+
+            var emptyCity = new CityDto { IsActive = true };
+            return PartialView("_FormModal", emptyCity);
         }
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CityDto dto)
+
+        [HttpGet]
+        public async Task<IActionResult> EditForm(int id)
         {
-            if (!ModelState.IsValid)
-                return View(dto);
-            await _cityService.AddAsync(dto);
-            return RedirectToAction(nameof(Index));
-        }
-        public async Task<IActionResult> Edit(int id)
-        {
-            var city = await _cityService.GetByIdAsync(id);
-            if (city == null)
+            var cityResponse = await _httpClient.GetAsync($"/api/city/{id}");
+            if (!cityResponse.IsSuccessStatusCode)
                 return NotFound();
 
-            return View(city);
-        }
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(CityDto dto)
-        {
-            if (!ModelState.IsValid)
-                return View(dto);
+            var city = await cityResponse.Content.ReadFromJsonAsync<CityDto>();
 
-            await _cityService.UpdateAsync(dto);
-            return RedirectToAction(nameof(Index));
+            var regionResponse = await _httpClient.GetAsync("/api/region");
+            if (regionResponse.IsSuccessStatusCode)
+            {
+                var regions = await regionResponse.Content.ReadFromJsonAsync<IEnumerable<RegionDto>>();
+                ViewBag.Regions = regions;
+            }
+
+            return PartialView("_FormModal", city);
         }
-        public async Task<IActionResult> Delete(int id)
+
+        [HttpGet]
+        public async Task<IActionResult> DeleteConfirm(int id)
         {
-            await _cityService.DeleteAsync(id);
-            return RedirectToAction(nameof(Index));
+            var response = await _httpClient.GetAsync($"/api/city/{id}");
+            if (!response.IsSuccessStatusCode)
+                return NotFound();
+
+            var city = await response.Content.ReadFromJsonAsync<CityDto>();
+            return PartialView("_DeleteModal", city);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateJson([FromForm] CityDto dto)
+        {
+            var response = await _httpClient.PostAsJsonAsync("/api/city", dto);
+
+            if (response.IsSuccessStatusCode)
+                return Json(new { success = true, message = "Şehir başarıyla eklendi." });
+
+            return Json(new { success = false, message = "Bir hata oluştu." });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Update(int id, [FromForm] CityDto dto)
+        {
+            dto.Id = id;
+            var response = await _httpClient.PutAsJsonAsync($"/api/city/{id}", dto);
+
+            if (response.IsSuccessStatusCode)
+                return Json(new { success = true, message = "Şehir başarıyla güncellendi." });
+
+            return Json(new { success = false, message = "Bir hata oluştu." });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteJson(int id)
+        {
+            var response = await _httpClient.DeleteAsync($"/api/city/{id}");
+
+            if (response.IsSuccessStatusCode)
+                return Json(new { success = true, message = "Şehir başarıyla silindi." });
+
+            return Json(new { success = false, message = "Bir hata oluştu." });
         }
     }
 }
+
+
 
 
 

@@ -6,7 +6,6 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Business.Services
@@ -14,61 +13,36 @@ namespace Business.Services
     public class BrandsService : IBrandsService
     {
         private readonly ApplicationContext _context;
+
         public BrandsService(ApplicationContext context)
         {
             _context = context;
         }
 
-        public async Task<BrandDto> AddAsync(BrandDto dto)
+        public async Task<List<BrandDto>> GetAllAsync(bool pActive = false)
         {
-            if (string.IsNullOrWhiteSpace(dto.Name))
-                throw new Exception("Marka adı boş olamaz");
+            var list = await _context.Brands
+                .Select(b => new BrandDto
+                {
+                    Id = b.Id,
+                    Name = b.Name,
+                    IsActive = b.IsActive
+                })
+                .ToListAsync();
 
-            
-            var entity = new Brand
-            {
-                Name = dto.Name,
-                IsActive = true
-            };
+            // Kullanıcı rolü ise sadece aktifler
+            if (pActive)
+                list = list.Where(b => b.IsActive).ToList();
 
-            _context.Brands.Add(entity);      
-            await _context.SaveChangesAsync(); 
-
-            
-            dto.Id = entity.Id;
-            dto.IsActive = entity.IsActive;
-            return dto;
+            return list;
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<BrandDto?> GetByIdAsync(int pId)
         {
-            var brand = await _context.Brands.FindAsync(id);
+            var brand = await _context.Brands.FindAsync(pId);
             if (brand == null)
-                return false;
-            brand.IsActive = false;
-            _context.Brands.Update(brand);
-            await _context.SaveChangesAsync();
-            return true;
-        }
-
-        public async Task<List<BrandDto>> GetAllAsync()
-        {
-            return await _context.Brands
-                                 .Where(b => b.IsActive)
-                                 .Select(b => new BrandDto
-                                 {
-                                     Id = b.Id,
-                                     Name = b.Name,
-                                     IsActive = b.IsActive
-                                 })
-                                 .ToListAsync();
-        }
-
-        public async Task<BrandDto?> GetByIdAsync(int id)
-        {
-            var brand = await _context.Brands.FindAsync(id);
-            if(brand == null || !brand.IsActive)
                 return null;
+
             return new BrandDto
             {
                 Id = brand.Id,
@@ -77,19 +51,53 @@ namespace Business.Services
             };
         }
 
-        public async Task<BrandDto> UpdateAsync(BrandDto dto)
+        public async Task<BrandDto> AddAsync(BrandDto pModel)
         {
-           var brand = await _context.Brands.FindAsync(dto.Id);
-           if(brand == null )
+            if (string.IsNullOrWhiteSpace(pModel.Name))
+                throw new Exception("Marka adı boş olamaz");
+
+            var entity = new Brand
+            {
+                Name = pModel.Name,
+                IsActive = true
+            };
+
+            _context.Brands.Add(entity);
+            await _context.SaveChangesAsync();
+
+            pModel.Id = entity.Id;
+            pModel.IsActive = true;
+            return pModel;
+        }
+
+        public async Task<bool> UpdateAsync(BrandDto pModel)
+        {
+            var brand = await _context.Brands.FindAsync(pModel.Id);
+            if (brand == null)
                 throw new Exception("Marka bulunamadı");
 
-            brand.Name = dto.Name;
-            brand.IsActive = dto.IsActive;
+            brand.Name = pModel.Name;
+            brand.IsActive = pModel.IsActive;
 
             _context.Brands.Update(brand);
             await _context.SaveChangesAsync();
-            return dto;
+
+            return true;
+        }
+
+        public async Task<bool> DeleteAsync(int pId)
+        {
+            var brand = await _context.Brands.FindAsync(pId);
+            if (brand == null)
+                return false;
+
+            brand.IsActive = false;
+            _context.Brands.Update(brand);
+            await _context.SaveChangesAsync();
+
+            return true;
         }
     }
 }
+
 

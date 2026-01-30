@@ -10,12 +10,12 @@ namespace Business.Interfaces
 {
     public interface ICityService
     {
-        Task<List<CityDto>> GetAllAsync();
-        Task<CityDto?> GetByIdAsync(int id);
+        Task<List<CityDto>> GetAllAsync(bool pActive = false);
+        Task<CityDto?> GetByIdAsync(int pId);
         Task<List<CityDto>> GetByRegionIdAsync(int regionId);
-        Task<CityDto> AddAsync(CityDto dto);   
-        Task<CityDto> UpdateAsync(CityDto dto);
-        Task<bool> DeleteAsync(int id);
+        Task<CityDto> AddAsync(CityDto pModel);   
+        Task<bool> UpdateAsync(CityDto pModel);
+        Task<bool> DeleteAsync(int pId);
     }
 }
 

@@ -1,21 +1,18 @@
 ﻿using Core.Dtos;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Business.Interfaces
 {
     public interface IShelfService
     {
-        Task<List<ShelfDto>> GetAllAsync();
-        Task<ShelfDto?> GetByIdAsync(int id);
+        Task<List<ShelfDto>> GetAllAsync(bool pActive = false);
+        Task<ShelfDto?> GetByIdAsync(int pId);
         Task<List<ShelfDto>> GetByWarehouseIdAsync(int warehouseId);
 
-        Task<ShelfDto> AddAsync(ShelfDto dto);
-        Task<ShelfDto> UpdateAsync(ShelfDto dto);
-        Task<bool> DeleteAsync(int id);
+        Task<ShelfDto> AddAsync(ShelfDto pModel);
+        Task<bool> UpdateAsync(ShelfDto pModel);
+        Task<bool> DeleteAsync(int pId);
     }
 }
 

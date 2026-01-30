@@ -1,7 +1,7 @@
 ﻿using Business.Interfaces;
 using Core.Dtos;
 using Core.Entities;
-using Data.Context; 
+using Data.Context;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -12,30 +12,37 @@ namespace Business.Services
 {
     public class CityService : ICityService
     {
-        private readonly ApplicationContext _context; 
+        private readonly ApplicationContext _context;
 
         public CityService(ApplicationContext context)
         {
             _context = context;
         }
 
-        public async Task<List<CityDto>> GetAllAsync()
+        public async Task<List<CityDto>> GetAllAsync(bool pActive = false)
         {
-            return await _context.Cities
-                                 .Where(c => c.IsActive)
-                                 .Select(c => new CityDto
-                                 {
-                                     Id = c.Id,
-                                     Name = c.CityName,
-                                     RegionId = c.RegionId,
-                                     IsActive = c.IsActive
-                                 }).ToListAsync();
+            var list = await _context.Cities
+                .Select(c => new CityDto
+                {
+                    Id = c.Id,
+                    Name = c.CityName,
+                    RegionId = c.RegionId,
+                    IsActive = c.IsActive
+                })
+                .ToListAsync();
+
+            // Eğer kullanıcı rolünde ise sadece aktifler
+            if (pActive)
+                list = list.Where(c => c.IsActive).ToList();
+
+            return list;
         }
 
-        public async Task<CityDto?> GetByIdAsync(int id)
+        public async Task<CityDto?> GetByIdAsync(int pId)
         {
-            var city = await _context.Cities.FindAsync(id);
-            if (city == null || !city.IsActive) return null;
+            var city = await _context.Cities.FindAsync(pId);
+            if (city == null)
+                return null;
 
             return new CityDto
             {
@@ -49,62 +56,65 @@ namespace Business.Services
         public async Task<List<CityDto>> GetByRegionIdAsync(int regionId)
         {
             return await _context.Cities
-                                 .Where(c => c.RegionId == regionId && c.IsActive)
-                                 .Select(c => new CityDto
-                                 {
-                                     Id = c.Id,
-                                     Name = c.CityName,
-                                     RegionId = c.RegionId,
-                                     IsActive = c.IsActive
-                                 }).ToListAsync();
+                .Where(c => c.RegionId == regionId && c.IsActive)
+                .Select(c => new CityDto
+                {
+                    Id = c.Id,
+                    Name = c.CityName,
+                    RegionId = c.RegionId,
+                    IsActive = c.IsActive
+                })
+                .ToListAsync();
         }
 
-        public async Task<CityDto> AddAsync(CityDto dto)
+        public async Task<CityDto> AddAsync(CityDto pModel)
         {
-            if (string.IsNullOrWhiteSpace(dto.Name))
-                throw new Exception("Şehir adı boş bırakılamaz");
+            if (string.IsNullOrWhiteSpace(pModel.Name))
+                throw new Exception("Şehir adı boş olamaz");
 
             var entity = new City
             {
-                CityName = dto.Name,
-                RegionId = dto.RegionId,
+                CityName = pModel.Name,
+                RegionId = pModel.RegionId,
                 IsActive = true
             };
 
             _context.Cities.Add(entity);
             await _context.SaveChangesAsync();
 
-            dto.Id = entity.Id;
-            dto.IsActive = true;
-            return dto;
+            pModel.Id = entity.Id;
+            pModel.IsActive = true;
+            return pModel;
         }
 
-        public async Task<CityDto> UpdateAsync(CityDto dto)
+        public async Task<bool> UpdateAsync(CityDto pModel)
         {
-            var city = await _context.Cities.FindAsync(dto.Id);
+            var city = await _context.Cities.FindAsync(pModel.Id);
             if (city == null)
                 throw new Exception("Şehir bulunamadı");
 
-            city.CityName = dto.Name;
-            city.RegionId = dto.RegionId;
-            city.IsActive = dto.IsActive;
+            city.CityName = pModel.Name;
+            city.RegionId = pModel.RegionId;
+            city.IsActive = pModel.IsActive;
 
             _context.Cities.Update(city);
             await _context.SaveChangesAsync();
 
-            return dto;
+            return true;
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int pId)
         {
-            var city = await _context.Cities.FindAsync(id);
+            var city = await _context.Cities.FindAsync(pId);
             if (city == null)
                 return false;
 
-            city.IsActive = false; 
+            city.IsActive = false;
             _context.Cities.Update(city);
             await _context.SaveChangesAsync();
+
             return true;
         }
     }
 }
+

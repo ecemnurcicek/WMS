@@ -1,8 +1,9 @@
 ﻿using Business.Interfaces;
 using Core.Dtos;
 using Core.Entities;
-using Data.Context; 
+using Data.Context;
 using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,68 +19,82 @@ namespace Business.Services
             _context = context;
         }
 
-        public async Task<List<TownDto>> GetAllAsync()
+        public async Task<List<TownDto>> GetAllAsync(bool pActive = false)
         {
-            return await _context.Towns
-                                 .Where(t => t.IsActive)
-                                 .Select(t => new TownDto
-                                 {
-                                     Id = t.Id,
-                                     Name = t.Name,
-                                     CityId = t.CityId
-                                 })
-                                 .ToListAsync();
+            var list = await _context.Towns
+                .Select(t => new TownDto
+                {
+                    Id = t.Id,
+                    Name = t.Name,
+                    CityId = t.CityId,
+                    IsActive = t.IsActive
+                })
+                .ToListAsync();
+
+            // RegionService birebir davranış
+            if (pActive)
+                list = list.Where(t => t.IsActive).ToList();
+
+            return list;
         }
 
-        public async Task<TownDto?> GetByIdAsync(int id)
+        public async Task<TownDto?> GetByIdAsync(int pId)
         {
-            var town = await _context.Towns.FindAsync(id);
-            if (town == null || !town.IsActive) return null;
+            var town = await _context.Towns.FindAsync(pId);
+            if (town == null)
+                return null;
 
             return new TownDto
             {
                 Id = town.Id,
                 Name = town.Name,
-                CityId = town.CityId
+                CityId = town.CityId,
+                IsActive = town.IsActive
             };
         }
 
-        public async Task<TownDto> AddAsync(TownDto dto)
+        public async Task<TownDto> AddAsync(TownDto pModel)
         {
-            var town = new Town
+            if (string.IsNullOrWhiteSpace(pModel.Name))
+                throw new Exception("İlçe adı boş olamaz");
+
+            var entity = new Town
             {
-                Name = dto.Name,
-                CityId = dto.CityId,
+                Name = pModel.Name,
+                CityId = pModel.CityId,
                 IsActive = true
             };
 
-            _context.Towns.Add(town);
+            _context.Towns.Add(entity);
             await _context.SaveChangesAsync();
 
-            dto.Id = town.Id;
-            return dto;
+            pModel.Id = entity.Id;
+            pModel.IsActive = true;
+            return pModel;
         }
 
-        public async Task<TownDto> UpdateAsync(TownDto dto)
+        public async Task<bool> UpdateAsync(TownDto pModel)
         {
-            var town = await _context.Towns.FindAsync(dto.Id);
-            if (town == null) throw new KeyNotFoundException("Town not found");
+            var town = await _context.Towns.FindAsync(pModel.Id);
+            if (town == null)
+                throw new Exception("İlçe bulunamadı");
 
-            town.Name = dto.Name;
-            town.CityId = dto.CityId;
+            town.Name = pModel.Name;
+            town.CityId = pModel.CityId;
+            town.IsActive = pModel.IsActive;
 
             _context.Towns.Update(town);
             await _context.SaveChangesAsync();
 
-            return dto;
+            return true;
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int pId)
         {
-            var town = await _context.Towns.FindAsync(id);
-            if (town == null) return false;
+            var town = await _context.Towns.FindAsync(pId);
+            if (town == null)
+                return false;
 
-            
             town.IsActive = false;
             _context.Towns.Update(town);
             await _context.SaveChangesAsync();

@@ -9,10 +9,11 @@ namespace Business.Interfaces
 {
     public interface IBrandsService
     {
-        Task<List<BrandDto>> GetAllAsync();
-        Task<BrandDto?> GetByIdAsync(int id);
-        Task<BrandDto> AddAsync(BrandDto dto);
-        Task<BrandDto> UpdateAsync(BrandDto dto);
-        Task<bool> DeleteAsync(int id);
+        Task<List<BrandDto>> GetAllAsync(bool pActive = false);
+        Task<BrandDto?> GetByIdAsync(int pId);
+        Task<BrandDto> AddAsync(BrandDto pModel);
+        Task<bool> UpdateAsync(BrandDto pModel);
+        Task<bool> DeleteAsync(int pId);
     }
 }
+
