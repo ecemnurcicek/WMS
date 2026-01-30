@@ -1,0 +1,100 @@
+@model IEnumerable<Core.Dtos.ShelfDto>
+
+@{
+    ViewData["Title"] = "Raf Yönetimi";
+    Layout = "_Layout";
+}
+
+<link rel="stylesheet" href="~/css/shelf.css" asp-append-version="true" />
+<script src="~/js/shelf.js" asp-append-version="true"></script>
+
+<div class="shelf-container">
+    <!-- Header -->
+    <div class="shelf-header">
+        <h1 class="page-heading">
+            <i class="fas fa-th me-3"></i>Raf Yönetimi
+        </h1>
+        <button class="btn btn-primary" id="btnAddShelf">
+            <i class="fas fa-plus me-2"></i>Yeni Raf Ekle
+        </button>
+    </div>
+
+    <!-- Shelves Table -->
+    <div class="shelf-table-wrapper">
+        @if (Model.Any())
+        {
+            <table class="table table-hover shelf-table">
+                <thead class="table-header-style">
+                    <tr>
+                        <th>#</th>
+                        <th>Raf Kodu</th>
+                        <th>Bölge</th>
+                        <th>Şehir</th>
+                        <th>İlçe</th>
+                        <th>Mağaza</th>
+                        <th>Depo</th>
+                        <th>Durum</th>
+                        <th class="action-column">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var shelf in Model)
+                    {
+                        <tr data-shelf-id="@shelf.Id">
+                            <td>@shelf.Id</td>
+                            <td class="shelf-code">@shelf.Code</td>
+                            <td>
+                                <span class="region-badge">@shelf.RegionName</span>
+                            </td>
+                            <td>
+                                <span class="city-badge">@shelf.CityName</span>
+                            </td>
+                            <td>
+                                <span class="town-badge">@shelf.TownName</span>
+                            </td>
+                            <td>
+                                <span class="shop-badge">@shelf.ShopName</span>
+                            </td>
+                            <td>
+                                <span class="warehouse-badge">@shelf.WarehouseName</span>
+                            </td>
+                            <td>
+                                @if (shelf.IsActive)
+                                {
+                                    <span class="badge bg-success">Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Pasif</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn btn-edit btn-sm" onclick="editShelf(@shelf.Id)">
+                                        <i class="fas fa-edit"></i> Düzenle
+                                    </button>
+                                    <button class="btn btn-delete btn-sm" onclick="deleteShelf(@shelf.Id)">
+                                        <i class="fas fa-trash"></i> Sil
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>Henüz raf eklenmemiştir</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Form Modal Container -->
+<div id="formModalContainer"></div>
+
+<!-- Delete Modal Container -->
+<div id="deleteModalContainer"></div>

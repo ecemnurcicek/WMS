@@ -1,0 +1,96 @@
+@model IEnumerable<Core.Dtos.WareHouseDto>
+
+@{
+    ViewData["Title"] = "Depo Yönetimi";
+    Layout = "_Layout";
+}
+
+<link rel="stylesheet" href="~/css/warehouse.css" asp-append-version="true" />
+<script src="~/js/warehouse.js" asp-append-version="true"></script>
+
+<div class="warehouse-container">
+    <!-- Header -->
+    <div class="warehouse-header">
+        <h1 class="page-heading">
+            <i class="fas fa-warehouse me-3"></i>Depo Yönetimi
+        </h1>
+        <button class="btn btn-primary" id="btnAddWareHouse">
+            <i class="fas fa-plus me-2"></i>Yeni Depo Ekle
+        </button>
+    </div>
+
+    <!-- WareHouses Table -->
+    <div class="warehouse-table-wrapper">
+        @if (Model.Any())
+        {
+            <table class="table table-hover warehouse-table">
+                <thead class="table-header-style">
+                    <tr>
+                        <th>#</th>
+                        <th>Depo Adı</th>
+                        <th>Bölge</th>
+                        <th>Şehir</th>
+                        <th>İlçe</th>
+                        <th>Mağaza</th>
+                        <th>Durum</th>
+                        <th class="action-column">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var wareHouse in Model)
+                    {
+                        <tr data-warehouse-id="@wareHouse.Id">
+                            <td>@wareHouse.Id</td>
+                            <td class="warehouse-name">@wareHouse.Name</td>
+                            <td>
+                                <span class="region-badge">@wareHouse.RegionName</span>
+                            </td>
+                            <td>
+                                <span class="city-badge">@wareHouse.CityName</span>
+                            </td>
+                            <td>
+                                <span class="town-badge">@wareHouse.TownName</span>
+                            </td>
+                            <td>
+                                <span class="shop-badge">@wareHouse.ShopName</span>
+                            </td>
+                            <td>
+                                @if (wareHouse.IsActive)
+                                {
+                                    <span class="badge bg-success">Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Pasif</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn btn-edit btn-sm" onclick="editWareHouse(@wareHouse.Id)">
+                                        <i class="fas fa-edit"></i> Düzenle
+                                    </button>
+                                    <button class="btn btn-delete btn-sm" onclick="deleteWareHouse(@wareHouse.Id)">
+                                        <i class="fas fa-trash"></i> Sil
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>Henüz depo eklenmemiştir</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Form Modal Container -->
+<div id="formModalContainer"></div>
+
+<!-- Delete Modal Container -->
+<div id="deleteModalContainer"></div>

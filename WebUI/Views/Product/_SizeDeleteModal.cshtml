@@ -1,0 +1,84 @@
+@model Core.Dtos.ProductDto
+
+<div class="modal fade" id="sizeDeleteModal" tabindex="-1" aria-labelledby="sizeDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="sizeDeleteModalLabel">
+                    <i class="fas fa-trash me-2"></i>Beden Sil
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Dikkat!</strong> Bu işlem geri alınamaz.
+                </div>
+                
+                <p>Aşağıdaki bedeni silmek istediğinizden emin misiniz?</p>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-4">Model:</dt>
+                            <dd class="col-8">@Model.Model</dd>
+                            
+                            <dt class="col-4">Renk:</dt>
+                            <dd class="col-8"><span class="badge bg-secondary">@Model.Color</span></dd>
+                            
+                            <dt class="col-4">Beden:</dt>
+                            <dd class="col-8"><span class="badge bg-primary">@Model.Size</span></dd>
+                            
+                            <dt class="col-4">EAN:</dt>
+                            <dd class="col-8 font-monospace">@Model.Ean</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>İptal
+                </button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeleteSize(@Model.Id)">
+                    <i class="fas fa-trash me-1"></i>Sil
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gizli alanlar -->
+<input type="hidden" id="deleteSizeModel" value="@Model.Model" />
+<input type="hidden" id="deleteSizeColor" value="@Model.Color" />
+
+<script>
+function confirmDeleteSize(id) {
+    fetch('/Product/DeleteJson?id=' + id, {
+        method: 'POST'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Modal kapat
+            const modal = bootstrap.Modal.getInstance(document.getElementById('sizeDeleteModal'));
+            modal.hide();
+            
+            // Option detail'ı yenile
+            const model = document.getElementById('deleteSizeModel')?.value || document.getElementById('currentOptionModel')?.value;
+            const color = document.getElementById('deleteSizeColor')?.value || document.getElementById('currentOptionColor')?.value;
+            
+            if (model && color) {
+                refreshOptionDetail(model, color);
+            }
+            
+            showToast(data.message, 'success');
+        } else {
+            showToast(data.message || 'Silme işlemi başarısız.', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Hata:', error);
+        showToast('Bir hata oluştu.', 'error');
+    });
+}
+</script>

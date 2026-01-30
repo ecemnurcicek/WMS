@@ -1,0 +1,116 @@
+@model IEnumerable<Core.Dtos.ProductOptionDto>
+
+@{
+    ViewData["Title"] = "Ürün Yönetimi";
+    Layout = "_Layout";
+}
+
+<link rel="stylesheet" href="~/css/product.css" asp-append-version="true" />
+<script src="~/js/product.js" asp-append-version="true"></script>
+
+<div class="product-container">
+    <!-- Header -->
+    <div class="product-header">
+        <h1 class="page-heading">
+            <i class="fas fa-box me-3"></i>Ürün Yönetimi (Option Bazlı)
+        </h1>
+        <button class="btn btn-primary" id="btnAddProduct">
+            <i class="fas fa-plus me-2"></i>Yeni Option Ekle
+        </button>
+    </div>
+
+    <!-- Options Table -->
+    <div class="product-table-wrapper">
+        @if (Model.Any())
+        {
+            <table class="table table-hover product-table">
+                <thead class="table-header-style">
+                    <tr>
+                        <th>Görsel</th>
+                        <th>Model</th>
+                        <th>Renk</th>
+                        <th>Beden Sayısı</th>
+                        <th>Toplam Stok</th>
+                        <th>Fiyat</th>
+                        <th>Durum</th>
+                        <th class="action-column">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var option in Model)
+                    {
+                        <tr data-model="@option.Model" data-color="@option.Color">
+                            <td>
+                                @if (!string.IsNullOrEmpty(option.CoverUrl))
+                                {
+                                    <img src="@option.CoverUrl" alt="@option.Model" class="product-image" />
+                                }
+                                else
+                                {
+                                    <div class="no-image">
+                                        <i class="fas fa-image"></i>
+                                    </div>
+                                }
+                            </td>
+                            <td class="product-model">@option.Model</td>
+                            <td>
+                                <span class="color-badge">@option.Color</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary">@option.SizeCount Beden</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">@option.TotalStock Adet</span>
+                            </td>
+                            <td class="product-price">€&nbsp;@option.Price</td>
+                            <td>
+                                @if (option.IsActive)
+                                {
+                                    <span class="badge bg-success">Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Pasif</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn btn-info btn-sm" 
+                                            onclick="openOptionDetail('@Html.Raw(option.Model)', '@Html.Raw(option.Color)')" 
+                                            title="Bedenler & Stok">
+                                        <i class="fas fa-boxes"></i> Detay
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>Henüz ürün eklenmemiştir</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Form Modal Container (Yeni Option için) -->
+<div id="formModalContainer"></div>
+
+<!-- Option Detail Modal Container (Bedenler ve Stok) -->
+<div id="optionDetailModalContainer"></div>
+
+<!-- Size Form Modal Container (Beden Ekle/Düzenle) -->
+<div id="sizeFormModalContainer"></div>
+
+<!-- Size Delete Modal Container -->
+<div id="sizeDeleteModalContainer"></div>
+
+<!-- ProductShelf Form Modal Container (Raf Ata) -->
+<div id="productShelfFormModalContainer"></div>
+
+<!-- ProductShelf Delete Modal Container -->
+<div id="productShelfDeleteModalContainer"></div>

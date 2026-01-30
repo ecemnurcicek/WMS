@@ -137,8 +137,9 @@ public class ApplicationContext : IdentityDbContext<ApplicationUser, Application
             entity.Property(e => e.Model).HasMaxLength(150).IsRequired();
             entity.Property(e => e.Color).HasMaxLength(50);
             entity.Property(e => e.Size).HasMaxLength(20);
-            entity.Property(e => e.CoverUrl).HasColumnName("CoverUrl").HasMaxLength(300);
-            entity.Property(e => e.Price).HasPrecision(10, 2);
+            entity.Property(e => e.CoverUrl).HasColumnName("CoverUrl").HasColumnType("TEXT");
+            entity.Property(e => e.Description).HasColumnName("Description").HasColumnType("TEXT");
+            entity.Property(e => e.Price).HasColumnType("REAL");
             entity.Property(e => e.Ean).HasMaxLength(50);
             entity.Property(e => e.CreatedAt).HasColumnType("DATETIME").HasDefaultValueSql("datetime('now')");
             entity.Property(e => e.UpdatedAt).HasColumnType("DATETIME");

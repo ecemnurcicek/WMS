@@ -18,6 +18,125 @@ namespace Business.Services
         {
             _context = context;
         }
+
+        // ==================== Option Bazlı Metodlar ====================
+
+        // Option bazlı listeleme (Model + Color gruplu)
+        public async Task<List<ProductOptionDto>> GetAllOptionsAsync(bool pActive = false)
+        {
+            var query = _context.Products
+                .Include(p => p.ProductShelves)
+                .AsQueryable();
+
+            if (pActive)
+                query = query.Where(p => p.IsActive);
+
+            var products = await query.ToListAsync();
+
+            var options = products
+                .GroupBy(p => new { p.Model, p.Color })
+                .Select(g => new ProductOptionDto
+                {
+                    Model = g.Key.Model,
+                    Color = g.Key.Color,
+                    CoverUrl = g.First().CoverUrl,
+                    Description = g.First().Description,
+                    Price = g.First().Price ?? 0m,
+                    SizeCount = g.Count(),
+                    TotalStock = g.Sum(p => p.ProductShelves.Sum(ps => ps.Quantity)),
+                    IsActive = g.Any(p => p.IsActive)
+                })
+                .OrderBy(o => o.Model)
+                .ThenBy(o => o.Color)
+                .ToList();
+
+            return options;
+        }
+
+        // Option detayı (Model + Color için tüm bedenler)
+        public async Task<ProductOptionDetailDto?> GetOptionDetailAsync(string model, string color)
+        {
+            var products = await _context.Products
+                .Include(p => p.ProductShelves)
+                .Where(p => p.Model == model && p.Color == color)
+                .ToListAsync();
+
+            if (!products.Any())
+                return null;
+
+            var firstProduct = products.First();
+
+            return new ProductOptionDetailDto
+            {
+                Model = model,
+                Color = color,
+                CoverUrl = firstProduct.CoverUrl,
+                Description = firstProduct.Description,
+                Price = firstProduct.Price ?? 0m,
+                IsActive = products.Any(p => p.IsActive),
+                Sizes = products.Select(p => new ProductSizeDto
+                {
+                    Id = p.Id,
+                    Model = p.Model,
+                    Color = p.Color,
+                    Size = p.Size ?? string.Empty,
+                    Ean = p.Ean ?? string.Empty,
+                    Price = p.Price ?? 0m,
+                    TotalStock = p.ProductShelves.Sum(ps => ps.Quantity),
+                    IsActive = p.IsActive
+                }).OrderBy(s => s.Size).ToList()
+            };
+        }
+
+        // Option için mağaza bazlı stok özeti
+        public async Task<List<ProductStockSummaryDto>> GetOptionStockSummaryAsync(string model, string color)
+        {
+            var productIds = await _context.Products
+                .Where(p => p.Model == model && p.Color == color)
+                .Select(p => p.Id)
+                .ToListAsync();
+
+            var stockSummary = await _context.ProductShelves
+                .Include(ps => ps.Shelf)
+                    .ThenInclude(s => s!.Warehouse)
+                        .ThenInclude(w => w!.Shop)
+                .Where(ps => productIds.Contains(ps.ProductId))
+                .GroupBy(ps => new { ps.Shelf!.Warehouse!.ShopId, ps.Shelf.Warehouse.Shop!.Name })
+                .Select(g => new ProductStockSummaryDto
+                {
+                    ShopId = g.Key.ShopId,
+                    ShopName = g.Key.Name ?? string.Empty,
+                    TotalStock = g.Sum(ps => ps.Quantity)
+                })
+                .OrderBy(s => s.ShopName)
+                .ToListAsync();
+
+            return stockSummary;
+        }
+
+        // Option için beden listesi
+        public async Task<List<ProductSizeDto>> GetSizesByOptionAsync(string model, string color)
+        {
+            return await _context.Products
+                .Include(p => p.ProductShelves)
+                .Where(p => p.Model == model && p.Color == color)
+                .Select(p => new ProductSizeDto
+                {
+                    Id = p.Id,
+                    Model = p.Model,
+                    Color = p.Color,
+                    Size = p.Size ?? string.Empty,
+                    Ean = p.Ean ?? string.Empty,
+                    Price = p.Price ?? 0m,
+                    TotalStock = p.ProductShelves.Sum(ps => ps.Quantity),
+                    IsActive = p.IsActive
+                })
+                .OrderBy(s => s.Size)
+                .ToListAsync();
+        }
+
+        // ==================== Mevcut Metodlar ====================
+
         public async Task<List<ProductDto>> GetAllAsync(bool pActive = false)
         {
             var list = await _context.Products
@@ -153,6 +272,132 @@ namespace Business.Services
 
             product.IsActive = false;
             _context.Products.Update(product);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        // ProductShelf methods
+        public async Task<List<ProductShelfDetailDto>> GetProductShelvesAsync(int productId)
+        {
+            return await _context.ProductShelves
+                .Include(ps => ps.Shelf)
+                    .ThenInclude(s => s!.Warehouse)
+                        .ThenInclude(w => w!.Shop)
+                            .ThenInclude(sh => sh!.Town)
+                                .ThenInclude(t => t!.City)
+                                    .ThenInclude(c => c!.Region)
+                .Where(ps => ps.ProductId == productId)
+                .Select(ps => new ProductShelfDetailDto
+                {
+                    Id = ps.Id,
+                    ShelfId = ps.ShelfId,
+                    ShelfCode = ps.Shelf != null ? ps.Shelf.Code : string.Empty,
+                    WarehouseId = ps.Shelf != null ? ps.Shelf.WarehouseId : 0,
+                    WarehouseName = ps.Shelf != null && ps.Shelf.Warehouse != null ? ps.Shelf.Warehouse.Name ?? string.Empty : string.Empty,
+                    ShopId = ps.Shelf != null && ps.Shelf.Warehouse != null ? ps.Shelf.Warehouse.ShopId : 0,
+                    ShopName = ps.Shelf != null && ps.Shelf.Warehouse != null && ps.Shelf.Warehouse.Shop != null ? ps.Shelf.Warehouse.Shop.Name ?? string.Empty : string.Empty,
+                    TownId = ps.Shelf != null && ps.Shelf.Warehouse != null && ps.Shelf.Warehouse.Shop != null ? ps.Shelf.Warehouse.Shop.TownId : 0,
+                    TownName = ps.Shelf != null && ps.Shelf.Warehouse != null && ps.Shelf.Warehouse.Shop != null && ps.Shelf.Warehouse.Shop.Town != null ? ps.Shelf.Warehouse.Shop.Town.Name : null,
+                    CityId = ps.Shelf != null && ps.Shelf.Warehouse != null && ps.Shelf.Warehouse.Shop != null && ps.Shelf.Warehouse.Shop.Town != null ? ps.Shelf.Warehouse.Shop.Town.CityId : 0,
+                    CityName = ps.Shelf != null && ps.Shelf.Warehouse != null && ps.Shelf.Warehouse.Shop != null && ps.Shelf.Warehouse.Shop.Town != null && ps.Shelf.Warehouse.Shop.Town.City != null ? ps.Shelf.Warehouse.Shop.Town.City.CityName : null,
+                    RegionId = ps.Shelf != null && ps.Shelf.Warehouse != null && ps.Shelf.Warehouse.Shop != null && ps.Shelf.Warehouse.Shop.Town != null && ps.Shelf.Warehouse.Shop.Town.City != null ? ps.Shelf.Warehouse.Shop.Town.City.RegionId : 0,
+                    RegionName = ps.Shelf != null && ps.Shelf.Warehouse != null && ps.Shelf.Warehouse.Shop != null && ps.Shelf.Warehouse.Shop.Town != null && ps.Shelf.Warehouse.Shop.Town.City != null && ps.Shelf.Warehouse.Shop.Town.City.Region != null ? ps.Shelf.Warehouse.Shop.Town.City.Region.RegionName : null,
+                    Quantity = ps.Quantity
+                })
+                .ToListAsync();
+        }
+
+        public async Task<ProductShelfDto?> GetProductShelfByIdAsync(int id)
+        {
+            var ps = await _context.ProductShelves
+                .Include(ps => ps.Product)
+                .Include(ps => ps.Shelf)
+                    .ThenInclude(s => s!.Warehouse)
+                        .ThenInclude(w => w!.Shop)
+                            .ThenInclude(sh => sh!.Town)
+                                .ThenInclude(t => t!.City)
+                                    .ThenInclude(c => c!.Region)
+                .FirstOrDefaultAsync(ps => ps.Id == id);
+
+            if (ps == null)
+                return null;
+
+            return new ProductShelfDto
+            {
+                Id = ps.Id,
+                ProductId = ps.ProductId,
+                ProductModel = ps.Product?.Model,
+                ProductColor = ps.Product?.Color,
+                ProductSize = ps.Product?.Size,
+                ShelfId = ps.ShelfId,
+                ShelfCode = ps.Shelf?.Code,
+                WarehouseId = ps.Shelf?.WarehouseId ?? 0,
+                WarehouseName = ps.Shelf?.Warehouse?.Name,
+                ShopId = ps.Shelf?.Warehouse?.ShopId ?? 0,
+                ShopName = ps.Shelf?.Warehouse?.Shop?.Name,
+                TownId = ps.Shelf?.Warehouse?.Shop?.TownId ?? 0,
+                TownName = ps.Shelf?.Warehouse?.Shop?.Town?.Name,
+                CityId = ps.Shelf?.Warehouse?.Shop?.Town?.CityId ?? 0,
+                CityName = ps.Shelf?.Warehouse?.Shop?.Town?.City?.CityName,
+                RegionId = ps.Shelf?.Warehouse?.Shop?.Town?.City?.RegionId ?? 0,
+                RegionName = ps.Shelf?.Warehouse?.Shop?.Town?.City?.Region?.RegionName,
+                Quantity = ps.Quantity
+            };
+        }
+
+        public async Task<ProductShelfDto> AddProductShelfAsync(ProductShelfDto pModel)
+        {
+            // Check if already exists
+            var existing = await _context.ProductShelves
+                .FirstOrDefaultAsync(ps => ps.ProductId == pModel.ProductId && ps.ShelfId == pModel.ShelfId);
+
+            if (existing != null)
+            {
+                // Update quantity
+                existing.Quantity += pModel.Quantity;
+                _context.ProductShelves.Update(existing);
+                await _context.SaveChangesAsync();
+                pModel.Id = existing.Id;
+                return pModel;
+            }
+
+            var entity = new ProductShelf
+            {
+                ProductId = pModel.ProductId,
+                ShelfId = pModel.ShelfId,
+                Quantity = pModel.Quantity
+            };
+
+            _context.ProductShelves.Add(entity);
+            await _context.SaveChangesAsync();
+
+            pModel.Id = entity.Id;
+            return pModel;
+        }
+
+        public async Task<bool> UpdateProductShelfAsync(ProductShelfDto pModel)
+        {
+            var ps = await _context.ProductShelves.FindAsync(pModel.Id);
+            if (ps == null)
+                return false;
+
+            ps.ShelfId = pModel.ShelfId;
+            ps.Quantity = pModel.Quantity;
+
+            _context.ProductShelves.Update(ps);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task<bool> DeleteProductShelfAsync(int id)
+        {
+            var ps = await _context.ProductShelves.FindAsync(id);
+            if (ps == null)
+                return false;
+
+            _context.ProductShelves.Remove(ps);
             await _context.SaveChangesAsync();
 
             return true;

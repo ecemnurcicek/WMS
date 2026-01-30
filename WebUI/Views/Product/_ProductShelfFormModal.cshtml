@@ -1,0 +1,220 @@
+@model Core.Dtos.ProductShelfDto
+@{
+    var regions = ViewBag.Regions as IEnumerable<Core.Dtos.RegionDto> ?? new List<Core.Dtos.RegionDto>();
+    var cities = ViewBag.Cities as IEnumerable<Core.Dtos.CityDto> ?? new List<Core.Dtos.CityDto>();
+    var towns = ViewBag.Towns as IEnumerable<Core.Dtos.TownDto> ?? new List<Core.Dtos.TownDto>();
+    var shops = ViewBag.Shops as IEnumerable<Core.Dtos.ShopDto> ?? new List<Core.Dtos.ShopDto>();
+    var warehouses = ViewBag.Warehouses as IEnumerable<Core.Dtos.WareHouseDto> ?? new List<Core.Dtos.WareHouseDto>();
+    var shelves = ViewBag.Shelves as IEnumerable<Core.Dtos.ShelfDto> ?? new List<Core.Dtos.ShelfDto>();
+}
+
+<!-- ProductShelf Form Modal - Beden Bazlı Raf Ataması -->
+<div class="modal fade" id="productShelfFormModal" tabindex="-1" aria-labelledby="productShelfFormModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="productShelfFormModalTitle">
+                    <i class="fas fa-warehouse me-2"></i>Raf Ataması (Beden Bazlı)
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="productShelfId" name="Id" value="@(Model?.Id ?? 0)" />
+                <input type="hidden" id="productShelfProductId" name="ProductId" value="@(Model?.ProductId ?? 0)" />
+                
+                <!-- Mevcut Raf Atamaları -->
+                <div class="mb-4">
+                    <h6 class="border-bottom pb-2 mb-3">
+                        <i class="fas fa-list me-2"></i>Mevcut Raf Atamaları
+                    </h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Bölge</th>
+                                    <th>Şehir</th>
+                                    <th>İlçe</th>
+                                    <th>Mağaza</th>
+                                    <th>Depo</th>
+                                    <th>Raf</th>
+                                    <th>Adet</th>
+                                    <th class="text-center">İşlem</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productShelvesBody">
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted">
+                                        <div class="spinner-border spinner-border-sm" role="status">
+                                            <span class="visually-hidden">Yükleniyor...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Yeni Raf Ataması Formu -->
+                <div class="border-top pt-3">
+                    <h6 class="border-bottom pb-2 mb-3">
+                        <i class="fas fa-plus me-2"></i>Yeni Raf Ataması Ekle
+                    </h6>
+                    <form id="productShelfForm">
+                        <input type="hidden" name="Id" value="0" />
+                        <input type="hidden" name="ProductId" value="@(Model?.ProductId ?? 0)" />
+                        
+                        <div class="row">
+                            <!-- Bölge Seçimi -->
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="psRegion">Bölge <span class="text-danger">*</span></label>
+                                    <select id="psRegion" name="RegionId" class="form-control form-select" required>
+                                        <option value="">-- Bölge Seçiniz --</option>
+                                        @foreach (var region in regions)
+                                        {
+                                            if (Model?.RegionId == region.Id)
+                                            {
+                                                <option value="@region.Id" selected>@region.Name</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@region.Id">@region.Name</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Şehir Seçimi -->
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="psCity">Şehir <span class="text-danger">*</span></label>
+                                    <select id="psCity" name="CityId" class="form-control form-select" required>
+                                        <option value="">-- Önce Bölge Seçiniz --</option>
+                                        @foreach (var city in cities)
+                                        {
+                                            if (Model?.CityId == city.Id)
+                                            {
+                                                <option value="@city.Id" selected>@city.Name</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@city.Id">@city.Name</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- İlçe Seçimi -->
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="psTown">İlçe <span class="text-danger">*</span></label>
+                                    <select id="psTown" name="TownId" class="form-control form-select" required>
+                                        <option value="">-- Önce Şehir Seçiniz --</option>
+                                        @foreach (var town in towns)
+                                        {
+                                            if (Model?.TownId == town.Id)
+                                            {
+                                                <option value="@town.Id" selected>@town.Name</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@town.Id">@town.Name</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Mağaza Seçimi -->
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="psShop">Mağaza <span class="text-danger">*</span></label>
+                                    <select id="psShop" name="ShopId" class="form-control form-select" required>
+                                        <option value="">-- Önce İlçe Seçiniz --</option>
+                                        @foreach (var shop in shops)
+                                        {
+                                            if (Model?.ShopId == shop.Id)
+                                            {
+                                                <option value="@shop.Id" selected>@shop.Name</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@shop.Id">@shop.Name</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Depo Seçimi -->
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="psWarehouse">Depo <span class="text-danger">*</span></label>
+                                    <select id="psWarehouse" name="WarehouseId" class="form-control form-select" required>
+                                        <option value="">-- Önce Mağaza Seçiniz --</option>
+                                        @foreach (var warehouse in warehouses)
+                                        {
+                                            if (Model?.WarehouseId == warehouse.Id)
+                                            {
+                                                <option value="@warehouse.Id" selected>@warehouse.Name</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@warehouse.Id">@warehouse.Name</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Raf Seçimi -->
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="psShelf">Raf <span class="text-danger">*</span></label>
+                                    <select id="psShelf" name="ShelfId" class="form-control form-select" required>
+                                        <option value="">-- Önce Depo Seçiniz --</option>
+                                        @foreach (var shelf in shelves)
+                                        {
+                                            if (Model?.ShelfId == shelf.Id)
+                                            {
+                                                <option value="@shelf.Id" selected>@shelf.Code</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@shelf.Id">@shelf.Code</option>
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Adet -->
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="psQuantity">Adet <span class="text-danger">*</span></label>
+                                    <input type="number" id="psQuantity" name="Quantity" class="form-control" placeholder="Adet girin" min="1" value="@(Model?.Quantity ?? 1)" required>
+                                </div>
+                            </div>
+                            <div class="col-md-8 d-flex align-items-end mb-3">
+                                <button type="submit" class="btn btn-success" id="submitProductShelfButton">
+                                    <i class="fas fa-plus me-1"></i>Ekle
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Kapat
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

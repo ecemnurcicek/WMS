@@ -7,6 +7,7 @@ public class Product
     public string? Color { get; set; }
     public string? Size { get; set; }
     public string? CoverUrl { get; set; }
+    public string? Description { get; set; }
     public decimal? Price { get; set; }
     public string? Ean { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.Now;

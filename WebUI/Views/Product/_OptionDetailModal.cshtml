@@ -1,0 +1,214 @@
+@model Core.Dtos.ProductOptionDetailDto
+
+<div class="modal fade" id="optionDetailModal" tabindex="-1" aria-labelledby="optionDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="optionDetailModalLabel">
+                    <i class="fas fa-boxes me-2"></i>Option Detayı: @Model.Model - @Model.Color
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Option Bilgileri -->
+                <div class="row mb-4">
+                    <div class="col-md-3 text-center">
+                        @if (!string.IsNullOrEmpty(Model.CoverUrl))
+                        {
+                            <img src="@Model.CoverUrl" alt="@Model.Model" class="img-fluid rounded" style="max-height: 150px;" />
+                        }
+                        else
+                        {
+                            <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 150px;">
+                                <i class="fas fa-image fa-3x text-muted"></i>
+                            </div>
+                        }
+                    </div>
+                    <div class="col-md-9">
+                        <h4>@Model.Model - <span class="text-primary">@Model.Color</span></h4>
+                        @if (!string.IsNullOrEmpty(Model.Description))
+                        {
+                            <p class="text-muted">@Model.Description</p>
+                        }
+                        <div class="d-flex gap-3">
+                            <span class="badge bg-success fs-6">Fiyat: €@Model.Price</span>
+                            <span class="badge @(Model.IsActive ? "bg-success" : "bg-secondary") fs-6">
+                                @(Model.IsActive ? "Aktif" : "Pasif")
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <ul class="nav nav-tabs" id="optionDetailTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="sizes-tab" data-bs-toggle="tab" data-bs-target="#sizesTabPane" 
+                                type="button" role="tab" aria-controls="sizesTabPane" aria-selected="true">
+                            <i class="fas fa-ruler me-1"></i>Bedenler (@Model.Sizes.Count)
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="stock-tab" data-bs-toggle="tab" data-bs-target="#stockTabPane" 
+                                type="button" role="tab" aria-controls="stockTabPane" aria-selected="false">
+                            <i class="fas fa-warehouse me-1"></i>Mağaza Bazlı Stok
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content pt-3" id="optionDetailTabsContent">
+                    <!-- Bedenler Tab -->
+                    <div class="tab-pane fade show active" id="sizesTabPane" role="tabpanel" aria-labelledby="sizes-tab">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="mb-0">Beden Listesi</h6>
+                            <button type="button" class="btn btn-success btn-sm" 
+                                    onclick="openSizeCreateForm('@Html.Raw(Model.Model)', '@Html.Raw(Model.Color)')">
+                                <i class="fas fa-plus me-1"></i>Yeni Beden Ekle
+                            </button>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover" id="sizesTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Beden</th>
+                                        <th>EAN Kodu</th>
+                                        <th>Fiyat</th>
+                                        <th>Toplam Stok</th>
+                                        <th>Durum</th>
+                                        <th class="text-center">İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model.Sizes.Any())
+                                    {
+                                        @foreach (var size in Model.Sizes)
+                                        {
+                                            <tr data-size-id="@size.Id">
+                                                <td><span class="badge bg-primary">@size.Size</span></td>
+                                                <td class="font-monospace">@size.Ean</td>
+                                                <td>€@size.Price</td>
+                                                <td>
+                                                    <span class="badge bg-info">@size.TotalStock Adet</span>
+                                                </td>
+                                                <td>
+                                                    @if (size.IsActive)
+                                                    {
+                                                        <span class="badge bg-success">Aktif</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-secondary">Pasif</span>
+                                                    }
+                                                </td>
+                                                <td class="text-center">
+                                                    <div class="btn-group btn-group-sm">
+                                                        <button class="btn btn-outline-primary" 
+                                                                onclick="openProductShelfModal(@size.Id)" 
+                                                                title="Raf Ataması">
+                                                            <i class="fas fa-warehouse"></i>
+                                                        </button>
+                                                        <button class="btn btn-outline-warning" 
+                                                                onclick="editSize(@size.Id)" 
+                                                                title="Düzenle">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                        <button class="btn btn-outline-danger" 
+                                                                onclick="deleteSize(@size.Id)" 
+                                                                title="Sil">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <tr>
+                                            <td colspan="6" class="text-center text-muted py-4">
+                                                <i class="fas fa-info-circle me-2"></i>Bu option için henüz beden eklenmemiştir.
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Mağaza Bazlı Stok Tab -->
+                    <div class="tab-pane fade" id="stockTabPane" role="tabpanel" aria-labelledby="stock-tab">
+                        <h6 class="mb-3">Mağaza Bazlı Toplam Stok</h6>
+                        <div id="stockSummaryContainer">
+                            <div class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Yükleniyor...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Kapat
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gizli alan: Model ve Color değerleri -->
+<input type="hidden" id="currentOptionModel" value="@Model.Model" />
+<input type="hidden" id="currentOptionColor" value="@Model.Color" />
+
+<script>
+// Option detail modal açıldığında stok özetini yükle
+document.getElementById('stock-tab')?.addEventListener('shown.bs.tab', function () {
+    loadStockSummary();
+});
+
+function loadStockSummary() {
+    const model = document.getElementById('currentOptionModel').value;
+    const color = document.getElementById('currentOptionColor').value;
+    
+    fetch(`/Product/GetOptionStockSummary?model=${encodeURIComponent(model)}&color=${encodeURIComponent(color)}`)
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('stockSummaryContainer');
+            
+            if (data && data.length > 0) {
+                let html = '<div class="table-responsive"><table class="table table-bordered table-hover">';
+                html += '<thead class="table-light"><tr><th>Mağaza</th><th>Toplam Stok</th></tr></thead><tbody>';
+                
+                let totalStock = 0;
+                data.forEach(item => {
+                    html += `<tr>
+                        <td><i class="fas fa-store me-2 text-primary"></i>${item.shopName}</td>
+                        <td><span class="badge bg-info">${item.totalStock} Adet</span></td>
+                    </tr>`;
+                    totalStock += item.totalStock;
+                });
+                
+                html += `<tr class="table-success fw-bold">
+                    <td>Toplam</td>
+                    <td><span class="badge bg-success">${totalStock} Adet</span></td>
+                </tr>`;
+                
+                html += '</tbody></table></div>';
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = `
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle me-2"></i>Bu option için henüz stok kaydı bulunmamaktadır.
+                    </div>`;
+            }
+        })
+        .catch(error => {
+            console.error('Stok özeti yüklenirken hata:', error);
+            document.getElementById('stockSummaryContainer').innerHTML = `
+                <div class="alert alert-danger text-center">
+                    <i class="fas fa-exclamation-circle me-2"></i>Stok özeti yüklenirken bir hata oluştu.
+                </div>`;
+        });
+}
+</script>

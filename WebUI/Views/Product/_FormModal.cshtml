@@ -1,0 +1,110 @@
+@model Core.Dtos.ProductDto
+@{
+    var brands = ViewBag.Brands as IEnumerable<Core.Dtos.BrandDto> ?? new List<Core.Dtos.BrandDto>();
+}
+
+<!-- Form Modal -->
+<div class="modal fade" id="formModal" tabindex="-1" aria-labelledby="formModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="formModalTitle">
+                    @if (Model?.Id > 0)
+                    {
+                        <text><i class="fas fa-edit me-2"></i>Ürünü Düzenle</text>
+                    }
+                    else
+                    {
+                        <text><i class="fas fa-plus me-2"></i>Yeni Ürün Ekle</text>
+                    }
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="productForm">
+                <div class="modal-body">
+                    <input type="hidden" id="productId" name="Id" value="@(Model?.Id ?? 0)" />
+                    
+                    <div class="row">
+                        <!-- Model -->
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="productModel">Model <span style="color: #dc3545;">*</span></label>
+                                <input type="text" id="productModel" name="Model" class="form-control" placeholder="Model kodunu girin" value="@(Model?.Model ?? string.Empty)" required>
+                            </div>
+                        </div>
+                        
+                        <!-- Color -->
+                        <div class="col-md-3">
+                            <div class="form-group mb-3">
+                                <label for="productColor">Renk <span style="color: #dc3545;">*</span></label>
+                                <input type="text" id="productColor" name="Color" class="form-control" placeholder="Renk kodu" value="@(Model?.Color ?? string.Empty)" required>
+                            </div>
+                        </div>
+                        
+                        <!-- Size -->
+                        <div class="col-md-3">
+                            <div class="form-group mb-3">
+                                <label for="productSize">Beden <span style="color: #dc3545;">*</span></label>
+                                <input type="text" id="productSize" name="Size" class="form-control" placeholder="Beden" value="@(Model?.Size ?? string.Empty)" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- EAN -->
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="productEan">EAN Kodu <span style="color: #dc3545;">*</span></label>
+                                <input type="text" id="productEan" name="Ean" class="form-control" placeholder="13 haneli EAN kodu" value="@(Model?.Ean ?? string.Empty)" minlength="13" maxlength="13" pattern="[0-9]{13}" title="EAN kodu tam 13 haneli rakam olmalıdır" required>
+                                <small class="text-muted">EAN kodu tam 13 karakter olmalıdır</small>
+                            </div>
+                        </div>
+                        
+                        <!-- Price -->
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="productPrice">Fiyat (EUR - €) <span style="color: #dc3545;">*</span></label>
+                                <input type="number" id="productPrice" name="Price" class="form-control" placeholder="0.00" step="0.01" min="0" value="@(Model?.Price ?? 0)" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cover URL -->
+                    <div class="form-group mb-3">
+                        <label for="productCoverUrl">Görsel URL</label>
+                        <input type="url" id="productCoverUrl" name="CoverUrl" class="form-control" placeholder="https://example.com/image.jpg" value="@(Model?.CoverUrl ?? string.Empty)">
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group mb-3">
+                        <label for="productDescription">Açıklama</label>
+                        <textarea id="productDescription" name="Description" class="form-control" rows="3" placeholder="Ürün açıklaması">@(Model?.Description ?? string.Empty)</textarea>
+                    </div>
+
+                    <!-- Aktiflik Durumu -->
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input type="checkbox" id="productIsActive" name="IsActive" class="form-check-input" @(Model?.IsActive == true ? "checked" : "")>
+                            <label class="form-check-label" for="productIsActive">
+                                Aktif
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary" id="submitButton">
+                        @if (Model?.Id > 0)
+                        {
+                            <text>Güncelle</text>
+                        }
+                        else
+                        {
+                            <text>Ekle</text>
+                        }
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

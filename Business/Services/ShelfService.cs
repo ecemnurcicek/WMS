@@ -22,10 +22,24 @@ namespace Business.Services
         public async Task<List<ShelfDto>> GetAllAsync(bool pActive = false)
         {
             var list = await _context.Shelves
+                .Include(s => s.Warehouse)
+                    .ThenInclude(w => w!.Shop)
+                        .ThenInclude(sh => sh!.Town)
+                            .ThenInclude(t => t!.City)
+                                .ThenInclude(c => c!.Region)
                 .Select(s => new ShelfDto
                 {
                     Id = s.Id,
                     WarehouseId = s.WarehouseId,
+                    WarehouseName = s.Warehouse != null ? s.Warehouse.Name : null,
+                    ShopId = s.Warehouse != null ? s.Warehouse.ShopId : 0,
+                    ShopName = s.Warehouse != null && s.Warehouse.Shop != null ? s.Warehouse.Shop.Name : null,
+                    TownId = s.Warehouse != null && s.Warehouse.Shop != null ? s.Warehouse.Shop.TownId : 0,
+                    TownName = s.Warehouse != null && s.Warehouse.Shop != null && s.Warehouse.Shop.Town != null ? s.Warehouse.Shop.Town.Name : null,
+                    CityId = s.Warehouse != null && s.Warehouse.Shop != null && s.Warehouse.Shop.Town != null ? s.Warehouse.Shop.Town.CityId : 0,
+                    CityName = s.Warehouse != null && s.Warehouse.Shop != null && s.Warehouse.Shop.Town != null && s.Warehouse.Shop.Town.City != null ? s.Warehouse.Shop.Town.City.CityName : null,
+                    RegionId = s.Warehouse != null && s.Warehouse.Shop != null && s.Warehouse.Shop.Town != null && s.Warehouse.Shop.Town.City != null ? s.Warehouse.Shop.Town.City.RegionId : 0,
+                    RegionName = s.Warehouse != null && s.Warehouse.Shop != null && s.Warehouse.Shop.Town != null && s.Warehouse.Shop.Town.City != null && s.Warehouse.Shop.Town.City.Region != null ? s.Warehouse.Shop.Town.City.Region.RegionName : null,
                     Code = s.Code,
                     IsActive = s.IsActive
                 })
@@ -40,7 +54,14 @@ namespace Business.Services
 
         public async Task<ShelfDto?> GetByIdAsync(int pId)
         {
-            var shelf = await _context.Shelves.FindAsync(pId);
+            var shelf = await _context.Shelves
+                .Include(s => s.Warehouse)
+                    .ThenInclude(w => w!.Shop)
+                        .ThenInclude(sh => sh!.Town)
+                            .ThenInclude(t => t!.City)
+                                .ThenInclude(c => c!.Region)
+                .FirstOrDefaultAsync(s => s.Id == pId);
+
             if (shelf == null)
                 return null;
 
@@ -48,6 +69,15 @@ namespace Business.Services
             {
                 Id = shelf.Id,
                 WarehouseId = shelf.WarehouseId,
+                WarehouseName = shelf.Warehouse?.Name,
+                ShopId = shelf.Warehouse?.ShopId ?? 0,
+                ShopName = shelf.Warehouse?.Shop?.Name,
+                TownId = shelf.Warehouse?.Shop?.TownId ?? 0,
+                TownName = shelf.Warehouse?.Shop?.Town?.Name,
+                CityId = shelf.Warehouse?.Shop?.Town?.CityId ?? 0,
+                CityName = shelf.Warehouse?.Shop?.Town?.City?.CityName,
+                RegionId = shelf.Warehouse?.Shop?.Town?.City?.RegionId ?? 0,
+                RegionName = shelf.Warehouse?.Shop?.Town?.City?.Region?.RegionName,
                 Code = shelf.Code,
                 IsActive = shelf.IsActive
             };
@@ -56,11 +86,25 @@ namespace Business.Services
         public async Task<List<ShelfDto>> GetByWarehouseIdAsync(int warehouseId)
         {
             return await _context.Shelves
+                .Include(s => s.Warehouse)
+                    .ThenInclude(w => w!.Shop)
+                        .ThenInclude(sh => sh!.Town)
+                            .ThenInclude(t => t!.City)
+                                .ThenInclude(c => c!.Region)
                 .Where(s => s.WarehouseId == warehouseId && s.IsActive)
                 .Select(s => new ShelfDto
                 {
                     Id = s.Id,
                     WarehouseId = s.WarehouseId,
+                    WarehouseName = s.Warehouse != null ? s.Warehouse.Name : null,
+                    ShopId = s.Warehouse != null ? s.Warehouse.ShopId : 0,
+                    ShopName = s.Warehouse != null && s.Warehouse.Shop != null ? s.Warehouse.Shop.Name : null,
+                    TownId = s.Warehouse != null && s.Warehouse.Shop != null ? s.Warehouse.Shop.TownId : 0,
+                    TownName = s.Warehouse != null && s.Warehouse.Shop != null && s.Warehouse.Shop.Town != null ? s.Warehouse.Shop.Town.Name : null,
+                    CityId = s.Warehouse != null && s.Warehouse.Shop != null && s.Warehouse.Shop.Town != null ? s.Warehouse.Shop.Town.CityId : 0,
+                    CityName = s.Warehouse != null && s.Warehouse.Shop != null && s.Warehouse.Shop.Town != null && s.Warehouse.Shop.Town.City != null ? s.Warehouse.Shop.Town.City.CityName : null,
+                    RegionId = s.Warehouse != null && s.Warehouse.Shop != null && s.Warehouse.Shop.Town != null && s.Warehouse.Shop.Town.City != null ? s.Warehouse.Shop.Town.City.RegionId : 0,
+                    RegionName = s.Warehouse != null && s.Warehouse.Shop != null && s.Warehouse.Shop.Town != null && s.Warehouse.Shop.Town.City != null && s.Warehouse.Shop.Town.City.Region != null ? s.Warehouse.Shop.Town.City.Region.RegionName : null,
                     Code = s.Code,
                     IsActive = s.IsActive
                 })
