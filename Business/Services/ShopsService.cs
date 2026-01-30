@@ -22,12 +22,22 @@ namespace Business.Services
         public async Task<List<ShopDto>> GetAllAsync(bool pActive = false)
         {
             var list = await _context.Shops
+                .Include(s => s.Brand)
+                .Include(s => s.Town)
+                    .ThenInclude(t => t!.City)
+                        .ThenInclude(c => c!.Region)
                 .Select(s => new ShopDto
                 {
                     Id = s.Id,
                     Name = s.Name,
                     BrandId = s.BrandId,
+                    BrandName = s.Brand != null ? s.Brand.Name : null,
                     TownId = s.TownId,
+                    TownName = s.Town != null ? s.Town.Name : null,
+                    CityId = s.Town != null ? s.Town.CityId : 0,
+                    CityName = s.Town != null && s.Town.City != null ? s.Town.City.CityName : null,
+                    RegionId = s.Town != null && s.Town.City != null ? s.Town.City.RegionId : 0,
+                    RegionName = s.Town != null && s.Town.City != null && s.Town.City.Region != null ? s.Town.City.Region.RegionName : null,
                     IsActive = s.IsActive
                 })
                 .ToListAsync();
@@ -41,7 +51,12 @@ namespace Business.Services
 
         public async Task<ShopDto?> GetByIdAsync(int pId)
         {
-            var shop = await _context.Shops.FindAsync(pId);
+            var shop = await _context.Shops
+                .Include(s => s.Brand)
+                .Include(s => s.Town)
+                    .ThenInclude(t => t!.City)
+                        .ThenInclude(c => c!.Region)
+                .FirstOrDefaultAsync(s => s.Id == pId);
             if (shop == null)
                 return null;
 
@@ -50,7 +65,13 @@ namespace Business.Services
                 Id = shop.Id,
                 Name = shop.Name,
                 BrandId = shop.BrandId,
+                BrandName = shop.Brand?.Name,
                 TownId = shop.TownId,
+                TownName = shop.Town?.Name,
+                CityId = shop.Town?.CityId ?? 0,
+                CityName = shop.Town?.City?.CityName,
+                RegionId = shop.Town?.City?.RegionId ?? 0,
+                RegionName = shop.Town?.City?.Region?.RegionName,
                 IsActive = shop.IsActive
             };
         }
@@ -58,13 +79,23 @@ namespace Business.Services
         public async Task<List<ShopDto>> GetByTownIdAsync(int townId)
         {
             return await _context.Shops
+                .Include(s => s.Brand)
+                .Include(s => s.Town)
+                    .ThenInclude(t => t!.City)
+                        .ThenInclude(c => c!.Region)
                 .Where(s => s.TownId == townId && s.IsActive)
                 .Select(s => new ShopDto
                 {
                     Id = s.Id,
                     Name = s.Name,
                     BrandId = s.BrandId,
+                    BrandName = s.Brand != null ? s.Brand.Name : null,
                     TownId = s.TownId,
+                    TownName = s.Town != null ? s.Town.Name : null,
+                    CityId = s.Town != null ? s.Town.CityId : 0,
+                    CityName = s.Town != null && s.Town.City != null ? s.Town.City.CityName : null,
+                    RegionId = s.Town != null && s.Town.City != null ? s.Town.City.RegionId : 0,
+                    RegionName = s.Town != null && s.Town.City != null && s.Town.City.Region != null ? s.Town.City.Region.RegionName : null,
                     IsActive = s.IsActive
                 })
                 .ToListAsync();

@@ -1,0 +1,96 @@
+@model IEnumerable<Core.Dtos.ShopDto>
+
+@{
+    ViewData["Title"] = "Mağaza Yönetimi";
+    Layout = "_Layout";
+}
+
+<link rel="stylesheet" href="~/css/shop.css" asp-append-version="true" />
+<script src="~/js/shop.js" asp-append-version="true"></script>
+
+<div class="shop-container">
+    <!-- Header -->
+    <div class="shop-header">
+        <h1 class="page-heading">
+            <i class="fas fa-store me-3"></i>Mağaza Yönetimi
+        </h1>
+        <button class="btn btn-primary" id="btnAddShop">
+            <i class="fas fa-plus me-2"></i>Yeni Mağaza Ekle
+        </button>
+    </div>
+
+    <!-- Shops Table -->
+    <div class="shop-table-wrapper">
+        @if (Model.Any())
+        {
+            <table class="table table-hover shop-table">
+                <thead class="table-header-style">
+                    <tr>
+                        <th>#</th>
+                        <th>Mağaza Adı</th>
+                        <th>Bölge</th>
+                        <th>Şehir</th>
+                        <th>İlçe</th>
+                        <th>Marka</th>
+                        <th>Durum</th>
+                        <th class="action-column">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var shop in Model)
+                    {
+                        <tr data-shop-id="@shop.Id">
+                            <td>@shop.Id</td>
+                            <td class="shop-name">@shop.Name</td>
+                            <td>
+                                <span class="region-badge">@shop.RegionName</span>
+                            </td>
+                            <td>
+                                <span class="city-badge">@shop.CityName</span>
+                            </td>
+                            <td>
+                                <span class="town-badge">@shop.TownName</span>
+                            </td>
+                            <td>
+                                <span class="brand-badge">@shop.BrandName</span>
+                            </td>
+                            <td>
+                                @if (shop.IsActive)
+                                {
+                                    <span class="badge bg-success">Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Pasif</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn btn-edit btn-sm" onclick="editShop(@shop.Id)">
+                                        <i class="fas fa-edit"></i> Düzenle
+                                    </button>
+                                    <button class="btn btn-delete btn-sm" onclick="deleteShop(@shop.Id)">
+                                        <i class="fas fa-trash"></i> Sil
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="fas fa-inbox"></i>
+                <p>Henüz mağaza eklenmemiştir</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Form Modal Container -->
+<div id="formModalContainer"></div>
+
+<!-- Delete Modal Container -->
+<div id="deleteModalContainer"></div>

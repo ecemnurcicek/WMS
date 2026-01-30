@@ -41,6 +41,7 @@ builder.Services.AddScoped<IShelfService, ShelfService>();
 builder.Services.AddScoped<IShopsService, ShopsService>();
 builder.Services.AddScoped<ITownService, TownService>();
 builder.Services.AddScoped<IWareHouseService, WareHouseService>();
+builder.Services.AddScoped<IBrandsService, BrandsService>();
 
 var app = builder.Build();
 
