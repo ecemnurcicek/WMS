@@ -22,11 +22,13 @@ namespace Business.Services
         public async Task<List<CityDto>> GetAllAsync(bool pActive = false)
         {
             var list = await _context.Cities
+                .Include(c => c.Region)
                 .Select(c => new CityDto
                 {
                     Id = c.Id,
                     Name = c.CityName,
                     RegionId = c.RegionId,
+                    RegionName = c.Region != null ? c.Region.RegionName : null,
                     IsActive = c.IsActive
                 })
                 .ToListAsync();
@@ -40,31 +42,39 @@ namespace Business.Services
 
         public async Task<CityDto?> GetByIdAsync(int pId)
         {
-            var city = await _context.Cities.FindAsync(pId);
+            var city = await _context.Cities
+                .Include(c => c.Region)
+                .FirstOrDefaultAsync(c => c.Id == pId);
             if (city == null)
                 return null;
 
-            return new CityDto
+            var rModel = new CityDto
             {
                 Id = city.Id,
                 Name = city.CityName,
                 RegionId = city.RegionId,
+                RegionName = city.Region?.RegionName,
                 IsActive = city.IsActive
             };
+
+            return rModel;
         }
 
         public async Task<List<CityDto>> GetByRegionIdAsync(int regionId)
         {
-            return await _context.Cities
+            var rModel = await _context.Cities
+                .Include(c => c.Region)
                 .Where(c => c.RegionId == regionId && c.IsActive)
                 .Select(c => new CityDto
                 {
                     Id = c.Id,
                     Name = c.CityName,
                     RegionId = c.RegionId,
+                    RegionName = c.Region != null ? c.Region.RegionName : null,
                     IsActive = c.IsActive
                 })
                 .ToListAsync();
+            return rModel;
         }
 
         public async Task<CityDto> AddAsync(CityDto pModel)
