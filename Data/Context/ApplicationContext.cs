@@ -38,6 +38,10 @@ public class ApplicationContext : IdentityDbContext<ApplicationUser, Application
     public DbSet<Role> Roles { get; set; } = null!;
     public DbSet<UserRole> UserRoles { get; set; } = null!;
 
+    // Menu Management DbSets
+    public DbSet<Menu> Menus { get; set; } = null!;
+    public DbSet<MenuRole> MenuRoles { get; set; } = null!;
+
     #endregion
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -58,6 +62,8 @@ public class ApplicationContext : IdentityDbContext<ApplicationUser, Application
         modelBuilder.Entity<Transfer>().ToTable("Transfers");
         modelBuilder.Entity<TransferDetail>().ToTable("TransferDetails");
         modelBuilder.Entity<Log>().ToTable("Logs");
+        modelBuilder.Entity<Menu>().ToTable("Menus");
+        modelBuilder.Entity<MenuRole>().ToTable("MenuRoles");
 
         // Configure Identity tables
         modelBuilder.Entity<ApplicationUser>().ToTable("AspNetUsers");
@@ -175,7 +181,7 @@ public class ApplicationContext : IdentityDbContext<ApplicationUser, Application
             entity.Property(e => e.Name).HasMaxLength(150);
             entity.Property(e => e.CreatedAt).HasColumnType("DATETIME").HasDefaultValueSql("datetime('now')");
             entity.Property(e => e.UpdatedAt).HasColumnType("DATETIME");
-            entity.Property(e => e.IsSent).HasDefaultValue(false);
+            entity.Property(e => e.Status).HasDefaultValue(0);
             entity.HasOne(e => e.FromShop).WithMany(s => s.FromTransfers).HasForeignKey(e => e.FromShopId).OnDelete(DeleteBehavior.NoAction);
             entity.HasOne(e => e.ToShop).WithMany(s => s.ToTransfers).HasForeignKey(e => e.ToShopId).OnDelete(DeleteBehavior.NoAction);
         });
@@ -268,6 +274,31 @@ public class ApplicationContext : IdentityDbContext<ApplicationUser, Application
             entity.Property(e => e.CreatedAt).HasColumnType("DATETIME").HasDefaultValueSql("datetime('now')");
             entity.Property(e => e.UpdatedAt).HasColumnType("DATETIME");
             entity.Property(e => e.IsActive).HasDefaultValue(true);
+        });
+
+        // Menu configuration
+        modelBuilder.Entity<Menu>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(150).IsRequired();
+            entity.Property(e => e.Path).HasMaxLength(250).IsRequired();
+            entity.Property(e => e.IconName).HasMaxLength(100);
+            entity.Property(e => e.DisplayOrder).HasDefaultValue(0);
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.CreatedAt).HasColumnType("DATETIME").HasDefaultValueSql("datetime('now')");
+            entity.Property(e => e.UpdatedAt).HasColumnType("DATETIME");
+        });
+
+        // MenuRole configuration
+        modelBuilder.Entity<MenuRole>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.MenuId).IsRequired();
+            entity.Property(e => e.RoleId).IsRequired();
+            entity.Property(e => e.CreatedAt).HasColumnType("DATETIME").HasDefaultValueSql("datetime('now')");
+            entity.Property(e => e.UpdatedAt).HasColumnType("DATETIME");
+            entity.HasOne(e => e.Menu).WithMany(m => m.MenuRoles).HasForeignKey(e => e.MenuId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(e => e.Role).WithMany().HasForeignKey(e => e.RoleId).OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

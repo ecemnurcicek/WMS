@@ -9,16 +9,24 @@
 
 <link rel="stylesheet" href="~/css/dashboard.css" />
 
-<!-- Welcome Section -->
-<div class="welcome-section">
-    <div class="welcome-card">
-        <h2>Hoş Geldiniz, <span class="user-welcome">@Model.UserName</span>!</h2>
-        <p>WMS Yönetim Sistemi'ne geri hoş geldiniz. Son giriş zamanı: <span class="last-login">@Model.LastLoginTime.ToString("dd.MM.yyyy HH:mm:ss")</span></p>
+<div class="page-container dashboard-page-container">
+    <!-- Header -->
+    <div class="page-header dashboard-page-header">
+        <h1 class="page-heading">
+            <i class="fas fa-th-large me-3"></i>Dashboard
+        </h1>
     </div>
-</div>
 
-<!-- Stats Grid -->
-<div class="stats-grid">
+    <!-- Welcome Section -->
+    <div class="welcome-section">
+        <div class="welcome-card">
+            <h2>Hoş Geldiniz, <span class="user-welcome">@Model.UserName</span>!</h2>
+            <p>WMS Yönetim Sistemi'ne geri hoş geldiniz. Son giriş zamanı: <span class="last-login">@Model.LastLoginTime.ToString("dd.MM.yyyy HH:mm:ss")</span></p>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
     <!-- Total Products Card -->
     <div class="stat-card">
         <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
@@ -102,6 +110,7 @@
             <span>Raporlar</span>
         </button>
     </div>
+</div>
 </div>
 
 <script src="~/js/dashboard.js"></script>

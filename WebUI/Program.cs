@@ -30,6 +30,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IBusinessManager, BusinessManager>();
 builder.Services.AddScoped<IRegionService, RegionService>();
+builder.Services.AddScoped<IMenuService, MenuService>();
+builder.Services.AddScoped<IMenuRoleService, MenuRoleService>();
 
 // Add HttpClient for WebAPI communication
 var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7234";
@@ -49,6 +51,13 @@ builder.Services.AddHttpClient("WebAPI", client =>
 });
 
 var app = builder.Build();
+
+// Seed database
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
+    await Data.DatabaseSeeder.SeedMenusAsync(context);
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

@@ -8,4 +8,5 @@ public class UserLoginResultDto
     public string? UserName { get; set; }
     public string? UserEmail { get; set; }
     public List<string> Roles { get; set; } = new List<string>();
+    public List<int> RoleIds { get; set; } = new List<int>();
 }

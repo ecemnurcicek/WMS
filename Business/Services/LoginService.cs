@@ -63,7 +63,8 @@ public class LoginService : ILoginService
             UserId = user.Id,
             UserName = user.Name,
             UserEmail = user.Email,
-            Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList()
+            Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList(),
+            RoleIds = user.UserRoles.Select(ur => ur.RoleId).ToList()
         };
 
         return loginResult;

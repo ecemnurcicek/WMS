@@ -8,9 +8,9 @@
 <link rel="stylesheet" href="~/css/warehouse.css" asp-append-version="true" />
 <script src="~/js/warehouse.js" asp-append-version="true"></script>
 
-<div class="warehouse-container">
+<div class="page-container warehouse-container">
     <!-- Header -->
-    <div class="warehouse-header">
+    <div class="page-header warehouse-header">
         <h1 class="page-heading">
             <i class="fas fa-warehouse me-3"></i>Depo Yönetimi
         </h1>
@@ -20,7 +20,7 @@
     </div>
 
     <!-- WareHouses Table -->
-    <div class="warehouse-table-wrapper">
+    <div class="table-wrapper warehouse-table-wrapper">
         @if (Model.Any())
         {
             <table class="table table-hover warehouse-table">

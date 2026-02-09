@@ -8,9 +8,9 @@
 <link rel="stylesheet" href="~/css/shelf.css" asp-append-version="true" />
 <script src="~/js/shelf.js" asp-append-version="true"></script>
 
-<div class="shelf-container">
+<div class="page-container shelf-container">
     <!-- Header -->
-    <div class="shelf-header">
+    <div class="page-header shelf-header">
         <h1 class="page-heading">
             <i class="fas fa-th me-3"></i>Raf Yönetimi
         </h1>
@@ -20,7 +20,7 @@
     </div>
 
     <!-- Shelves Table -->
-    <div class="shelf-table-wrapper">
+    <div class="table-wrapper shelf-table-wrapper">
         @if (Model.Any())
         {
             <table class="table table-hover shelf-table">

@@ -1,0 +1,198 @@
+@model Core.Dtos.TransferDto
+@{
+    var isAdminOrManager = ViewBag.IsAdminOrManager as bool? ?? false;
+    var userId = ViewBag.UserId as int? ?? 0;
+}
+
+<!-- Detail Modal -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailModalTitle">
+                    <i class="fas fa-info-circle me-2"></i>Transfer Detayı
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Transfer Bilgileri -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-light">
+                                <strong>Transfer Bilgileri</strong>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-sm table-borderless">
+                                    <tr>
+                                        <th style="width: 140px;">Transfer Kodu:</th>
+                                        <td><code>@Model.Name</code></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Durum:</th>
+                                        <td>
+                                            @switch (Model.Status)
+                                            {
+                                                case 0:
+                                                    <span class="badge status-pending">Bekliyor</span>
+                                                    break;
+                                                case 1:
+                                                    <span class="badge status-sent">Gönderildi</span>
+                                                    break;
+                                                case 2:
+                                                    <span class="badge status-completed">Tamamlandı</span>
+                                                    break;
+                                                case 3:
+                                                    <span class="badge status-cancelled">İptal Edildi</span>
+                                                    break;
+                                            }
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Oluşturma Tarihi:</th>
+                                        <td>@Model.CreateAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                    </tr>
+                                    @if (Model.UpdateAt.HasValue)
+                                    {
+                                        <tr>
+                                            <th>Güncelleme Tarihi:</th>
+                                            <td>@Model.UpdateAt.Value.ToString("dd.MM.yyyy HH:mm")</td>
+                                        </tr>
+                                    }
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="card border-primary">
+                                    <div class="card-header bg-primary text-white">
+                                        <i class="fas fa-store me-2"></i>Talep Eden
+                                    </div>
+                                    <div class="card-body text-center">
+                                        <h5 class="mb-1">@Model.FromShopName</h5>
+                                        <span class="brand-badge">@Model.FromBrandName</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="card border-success">
+                                    <div class="card-header bg-success text-white">
+                                        <i class="fas fa-shipping-fast me-2"></i>Gönderen
+                                    </div>
+                                    <div class="card-body text-center">
+                                        <h5 class="mb-1">@Model.ToShopName</h5>
+                                        <span class="brand-badge">@Model.ToBrandName</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ürün Detayları -->
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <i class="fas fa-boxes me-2"></i>Transfer Edilen Ürünler (@Model.Details.Count adet)
+                    </div>
+                    <div class="card-body p-0">
+                        @if (Model.Details.Any())
+                        {
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Model</th>
+                                        <th>Renk</th>
+                                        <th>Beden</th>
+                                        <th>EAN</th>
+                                        <th class="text-center">İstenen</th>
+                                        <th class="text-center">Gönderilen</th>
+                                        <th class="text-center">Durum</th>
+                                        @if (Model.Status == 1 && isAdminOrManager)
+                                        {
+                                            <th class="text-center">İşlem</th>
+                                        }
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var detail in Model.Details)
+                                    {
+                                        <tr data-detail-id="@detail.Id">
+                                            <td>@detail.ProductModel</td>
+                                            <td><span class="color-badge">@detail.ProductColor</span></td>
+                                            <td>@detail.ProductSize</td>
+                                            <td><code>@detail.ProductEan</code></td>
+                                            <td class="text-center">
+                                                <span class="badge bg-primary">@detail.QuantityReq</span>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="badge bg-success sent-qty-@detail.Id">@detail.QuantitySend</span>
+                                            </td>
+                                            <td class="text-center">
+                                                @if (detail.QuantitySend >= detail.QuantityReq)
+                                                {
+                                                    <span class="badge bg-success"><i class="fas fa-check"></i> Tamamlandı</span>
+                                                }
+                                                else if (detail.QuantitySend > 0)
+                                                {
+                                                    <span class="badge bg-warning"><i class="fas fa-clock"></i> Kısmi</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary"><i class="fas fa-hourglass"></i> Bekliyor</span>
+                                                }
+                                            </td>
+                                            @if (Model.Status == 1 && isAdminOrManager)
+                                            {
+                                                <td class="text-center">
+                                                    <div class="input-group input-group-sm" style="width: 120px; margin: 0 auto;">
+                                                        <input type="number" class="form-control text-center detail-qty-input" 
+                                                               data-detail-id="@detail.Id" 
+                                                               min="0" max="@detail.QuantityReq" 
+                                                               value="@detail.QuantitySend">
+                                                        <button class="btn btn-success btn-update-qty" 
+                                                                data-detail-id="@detail.Id" 
+                                                                data-user-id="@userId"
+                                                                title="Güncelle">
+                                                            <i class="fas fa-check"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            }
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+                            <div class="text-center p-4 text-muted">
+                                <i class="fas fa-inbox fa-2x mb-2"></i>
+                                <p>Bu transferde ürün bulunmamaktadır</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                @if (Model.Status == 0)
+                {
+                    <button type="button" class="btn btn-success" onclick="updateTransferStatusFromDetail(@Model.Id, 1)">
+                        <i class="fas fa-shipping-fast me-2"></i>Gönderildi Yap
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="cancelTransferFromDetail(@Model.Id)">
+                        <i class="fas fa-times me-2"></i>İptal Et
+                    </button>
+                }
+                @if (Model.Status == 1)
+                {
+                    <button type="button" class="btn btn-primary" onclick="updateTransferStatusFromDetail(@Model.Id, 2)">
+                        <i class="fas fa-check-double me-2"></i>Tamamlandı Yap
+                    </button>
+                }
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+            </div>
+        </div>
+    </div>
+</div>

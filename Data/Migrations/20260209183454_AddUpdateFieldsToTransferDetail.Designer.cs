@@ -3,6 +3,7 @@ using System;
 using Data.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Data.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20260209183454_AddUpdateFieldsToTransferDetail")]
+    partial class AddUpdateFieldsToTransferDetail
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.22");
@@ -237,90 +240,6 @@ namespace Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Logs", (string)null);
-                });
-
-            modelBuilder.Entity("Core.Entities.Menu", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("DATETIME")
-                        .HasDefaultValueSql("datetime('now')");
-
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("DisplayOrder")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0);
-
-                    b.Property<string>("IconName")
-                        .HasMaxLength(100)
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(true);
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Path")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("DATETIME");
-
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Menus", (string)null);
-                });
-
-            modelBuilder.Entity("Core.Entities.MenuRole", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("DATETIME")
-                        .HasDefaultValueSql("datetime('now')");
-
-                    b.Property<int?>("CreatedBy")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("MenuId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("RoleId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("DATETIME");
-
-                    b.Property<int?>("UpdatedBy")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MenuId");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("MenuRoles", (string)null);
                 });
 
             modelBuilder.Entity("Core.Entities.Product", b =>
@@ -616,14 +535,14 @@ namespace Data.Migrations
                     b.Property<int>("FromShopId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsSent")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("Name")
                         .HasMaxLength(150)
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("Status")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(0);
 
                     b.Property<int>("ToShopId")
                         .HasColumnType("INTEGER");
@@ -965,25 +884,6 @@ namespace Data.Migrations
                     b.Navigation("Region");
                 });
 
-            modelBuilder.Entity("Core.Entities.MenuRole", b =>
-                {
-                    b.HasOne("Core.Entities.Menu", "Menu")
-                        .WithMany("MenuRoles")
-                        .HasForeignKey("MenuId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Core.Entities.Role", "Role")
-                        .WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Menu");
-
-                    b.Navigation("Role");
-                });
-
             modelBuilder.Entity("Core.Entities.ProductShelf", b =>
                 {
                     b.HasOne("Core.Entities.Product", "Product")
@@ -1234,11 +1134,6 @@ namespace Data.Migrations
             modelBuilder.Entity("Core.Entities.City", b =>
                 {
                     b.Navigation("Towns");
-                });
-
-            modelBuilder.Entity("Core.Entities.Menu", b =>
-                {
-                    b.Navigation("MenuRoles");
                 });
 
             modelBuilder.Entity("Core.Entities.Product", b =>

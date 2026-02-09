@@ -8,9 +8,9 @@
 <link rel="stylesheet" href="~/css/shop.css" asp-append-version="true" />
 <script src="~/js/shop.js" asp-append-version="true"></script>
 
-<div class="shop-container">
+<div class="page-container shop-container">
     <!-- Header -->
-    <div class="shop-header">
+    <div class="page-header shop-header">
         <h1 class="page-heading">
             <i class="fas fa-store me-3"></i>Mağaza Yönetimi
         </h1>
@@ -20,7 +20,7 @@
     </div>
 
     <!-- Shops Table -->
-    <div class="shop-table-wrapper">
+    <div class="table-wrapper shop-table-wrapper">
         @if (Model.Any())
         {
             <table class="table table-hover shop-table">

@@ -39,6 +39,7 @@ namespace WebUI.Controllers
             HttpContext.Session.SetString("UserName", result.UserName);
             HttpContext.Session.SetString("UserEmail", result.UserEmail);
             HttpContext.Session.SetString("UserRoles", string.Join(",", result.Roles));
+            HttpContext.Session.SetString("UserRoleIds", string.Join(",", result.RoleIds));
 
             await _logService.LogInfoAsync($"Kullanıcı {result.UserEmail} başarıyla giriş yaptı.", nameof(AccountController), result.UserId);
             _logger.LogInformation($"Kullanıcı {result.UserEmail} başarıyla giriş yaptı.");

@@ -6,6 +6,13 @@ using System.Threading.Tasks;
 
 namespace Core.Dtos
 {
+    /// <summary>
+    /// Transfer durumları:
+    /// 0 = Bekliyor
+    /// 1 = Gönderildi
+    /// 2 = Tamamlandı
+    /// 3 = İptal Edildi
+    /// </summary>
     public class TransferDto
     {
         public int Id { get; set; }
@@ -14,6 +21,27 @@ namespace Core.Dtos
         public string Name { get; set; } = null!;
         public DateTime CreateAt { get; set; }
         public int CreateBy { get; set; }
-        public bool IsSend { get; set; }
+        public DateTime? UpdateAt { get; set; }
+        public int? UpdateBy { get; set; }
+        public int Status { get; set; } // 0: Bekliyor, 1: Gönderildi, 2: Tamamlandı, 3: İptal Edildi
+
+        // Display properties
+        public string? FromShopName { get; set; }
+        public string? ToShopName { get; set; }
+        public string? FromBrandName { get; set; }
+        public string? ToBrandName { get; set; }
+        public string? CreatedByName { get; set; }
+        public int DetailCount { get; set; }
+
+        public string StatusText => Status switch
+        {
+            0 => "Bekliyor",
+            1 => "Gönderildi",
+            2 => "Tamamlandı",
+            3 => "İptal Edildi",
+            _ => "Bilinmiyor"
+        };
+
+        public List<TransferDetailDto> Details { get; set; } = new List<TransferDetailDto>();
     }
 }

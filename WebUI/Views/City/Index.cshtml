@@ -8,9 +8,9 @@
 <link rel="stylesheet" href="~/css/city.css" asp-append-version="true" />
 <script src="~/js/city.js" asp-append-version="true"></script>
 
-<div class="city-container">
+<div class="page-container city-container">
     <!-- Header -->
-    <div class="city-header">
+    <div class="page-header city-header">
         <h1 class="page-heading">
             <i class="fas fa-building me-3"></i>Şehir Yönetimi
         </h1>
@@ -20,7 +20,7 @@
     </div>
 
     <!-- Cities Table -->
-    <div class="city-table-wrapper">
+    <div class="table-wrapper city-table-wrapper">
         @if (Model.Any())
         {
             <table class="table table-hover city-table">

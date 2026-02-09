@@ -8,9 +8,9 @@
 <link rel="stylesheet" href="~/css/region.css" asp-append-version="true" />
 <script src="~/js/region.js" asp-append-version="true"></script>
 
-<div class="region-container">
+<div class="page-container region-container">
     <!-- Header -->
-    <div class="region-header">
+    <div class="page-header region-header">
         <h1 class="page-heading">
             <i class="fas fa-mountain me-3"></i>Bölge Yönetimi
         </h1>
@@ -20,7 +20,7 @@
     </div>
 
     <!-- Regions Table -->
-    <div class="region-table-wrapper">
+    <div class="table-wrapper region-table-wrapper">
         @if (Model.Any())
         {
             <table class="table table-hover region-table">

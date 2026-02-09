@@ -43,6 +43,7 @@ builder.Services.AddScoped<ITownService, TownService>();
 builder.Services.AddScoped<IWareHouseService, WareHouseService>();
 builder.Services.AddScoped<IBrandsService, BrandsService>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ITransferService, TransferService>();
 
 
 var app = builder.Build();

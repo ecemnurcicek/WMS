@@ -1,0 +1,360 @@
+/* Transfer Management Styles */
+
+.transfer-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.transfer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.page-heading {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #333;
+  display: flex;
+  align-items: center;
+}
+
+.page-heading i {
+  color: #667eea;
+}
+
+/* Filters */
+.transfer-filters {
+  display: flex;
+  gap: 20px;
+  padding: 15px 20px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 150px;
+}
+
+.filter-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+}
+
+/* Table */
+.transfer-table-wrapper {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.transfer-table {
+  margin-bottom: 0;
+  border-collapse: collapse;
+}
+
+.table-header-style {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.table-header-style th {
+  padding: 18px 15px;
+  font-weight: 600;
+  border: none;
+  vertical-align: middle;
+}
+
+.transfer-table tbody tr {
+  border-bottom: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.transfer-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.transfer-table td {
+  padding: 15px;
+  vertical-align: middle;
+  color: #333;
+}
+
+.action-column {
+  text-align: center;
+  width: 150px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+/* Shop Info Display */
+.shop-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.shop-info .shop-name {
+  font-weight: 500;
+}
+
+/* Status Badges */
+.status-pending {
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  color: #8b4513;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.status-sent {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  color: #2e7d32;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.status-completed {
+  background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+  color: #1565c0;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+.status-cancelled {
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+  color: #c62828;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+/* Brand Badge */
+.brand-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.color-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+/* Transfer Name Code */
+.transfer-name code {
+  background: #f4f4f4;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #333;
+}
+
+/* Buttons */
+.btn-edit {
+  padding: 6px 10px;
+  font-size: 12px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-edit:hover {
+  background: #218838;
+  transform: translateY(-1px);
+  color: white;
+}
+
+.btn-delete {
+  padding: 6px 10px;
+  font-size: 12px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-delete:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+  color: white;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #999;
+}
+
+.empty-state i {
+  font-size: 48px;
+  margin-bottom: 15px;
+  color: #ddd;
+}
+
+.empty-state p {
+  font-size: 16px;
+  margin: 0;
+}
+
+/* Product Search Results */
+.product-search-results {
+  position: absolute;
+  z-index: 1000;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  display: none;
+  width: calc(100% - 30px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.product-search-results.show {
+  display: block;
+}
+
+.product-search-item {
+  padding: 10px 15px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  transition: background 0.2s;
+}
+
+.product-search-item:hover {
+  background: #f5f5f5;
+}
+
+.product-search-item:last-child {
+  border-bottom: none;
+}
+
+.product-search-item .product-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.product-search-item .product-model {
+  font-weight: 600;
+  color: #333;
+}
+
+.product-search-item .product-details {
+  font-size: 12px;
+  color: #666;
+}
+
+.product-search-item .product-ean {
+  font-family: monospace;
+  font-size: 11px;
+  color: #888;
+}
+
+/* Shop Display for Normal Users */
+.shop-display {
+  text-align: center;
+  padding: 10px;
+}
+
+.shop-display h5 {
+  margin-bottom: 5px;
+  color: #333;
+}
+
+/* Modal Enhancements */
+#formModal .modal-body,
+#detailModal .modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* Card Headers */
+.card-header {
+  font-weight: 600;
+}
+
+/* Detail Table */
+#transferDetailsTable {
+  margin-bottom: 0;
+}
+
+#transferDetailsTable tbody tr {
+  transition: background 0.2s;
+}
+
+#transferDetailsTable tbody tr:hover {
+  background: #f8f9fa;
+}
+
+/* Remove Product Button */
+.btn-remove-product {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+/* Input Group in Detail Modal */
+.detail-qty-input {
+  text-align: center;
+  max-width: 60px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .transfer-filters {
+    flex-direction: column;
+  }
+  
+  .filter-group {
+    width: 100%;
+  }
+  
+  .transfer-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+}

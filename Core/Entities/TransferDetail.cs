@@ -9,6 +9,8 @@ public class TransferDetail
     public int QuantitySent { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     public int? CreatedBy { get; set; }
+    public DateTime? UpdateAt { get; set; }
+    public int? UpdateBy { get; set; }
 
     // Navigation properties
     public virtual Transfer? Transfer { get; set; }

@@ -32,7 +32,7 @@ public class DashboardService : IDashboardService
         var totalWarehouses = await _context.Warehouses.CountAsync(w => w.IsActive);
         var totalTransfers = await _context.Transfers.CountAsync();
         var activeTransfers = await _context.Transfers
-            .CountAsync(t => t.IsSent == false);
+            .CountAsync(t => t.Status == 0); // 0 = Bekliyor
 
         return new DashboardDataDto
         {

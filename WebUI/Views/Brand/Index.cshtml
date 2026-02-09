@@ -8,9 +8,9 @@
 <link rel="stylesheet" href="~/css/brand.css" asp-append-version="true" />
 <script src="~/js/brand.js" asp-append-version="true"></script>
 
-<div class="brand-container">
+<div class="page-container brand-container">
     <!-- Header -->
-    <div class="brand-header">
+    <div class="page-header brand-header">
         <h1 class="page-heading">
             <i class="fas fa-tags me-3"></i>Marka Yönetimi
         </h1>
@@ -20,7 +20,7 @@
     </div>
 
     <!-- Brands Table -->
-    <div class="brand-table-wrapper">
+    <div class="table-wrapper brand-table-wrapper">
         @if (Model.Any())
         {
             <table class="table table-hover brand-table">

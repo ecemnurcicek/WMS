@@ -15,6 +15,14 @@ namespace Core.Dtos
         public int QuantitySend { get; set; }
         public DateTime CreateAt { get; set; }
         public int CreateBy { get; set; }
+        public DateTime? UpdateAt { get; set; }
+        public int? UpdateBy { get; set; }
+
+        // Display properties
+        public string? ProductModel { get; set; }
+        public string? ProductColor { get; set; }
+        public string? ProductSize { get; set; }
+        public string? ProductEan { get; set; }
     }
 }
 

@@ -1,5 +1,12 @@
 namespace Core.Entities;
 
+/// <summary>
+/// Transfer durumları:
+/// 0 = Bekliyor
+/// 1 = Gönderildi
+/// 2 = Tamamlandı
+/// 3 = İptal Edildi
+/// </summary>
 public class Transfer
 {
     public int Id { get; set; }
@@ -10,7 +17,7 @@ public class Transfer
     public int? CreatedBy { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public int? UpdatedBy { get; set; }
-    public bool IsSent { get; set; } = false;
+    public int Status { get; set; } = 0; // 0: Bekliyor, 1: Gönderildi, 2: Tamamlandı, 3: İptal Edildi
 
     // Navigation properties
     public virtual Shop? FromShop { get; set; }

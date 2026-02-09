@@ -8,9 +8,9 @@
 <link rel="stylesheet" href="~/css/product.css" asp-append-version="true" />
 <script src="~/js/product.js" asp-append-version="true"></script>
 
-<div class="product-container">
+<div class="page-container product-container">
     <!-- Header -->
-    <div class="product-header">
+    <div class="page-header product-header">
         <h1 class="page-heading">
             <i class="fas fa-box me-3"></i>Ürün Yönetimi (Option Bazlı)
         </h1>
@@ -20,7 +20,7 @@
     </div>
 
     <!-- Options Table -->
-    <div class="product-table-wrapper">
+    <div class="table-wrapper product-table-wrapper">
         @if (Model.Any())
         {
             <table class="table table-hover product-table">

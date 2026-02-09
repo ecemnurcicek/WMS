@@ -1,0 +1,39 @@
+@model List<Core.Dtos.MenuDto>
+
+<aside class="dashboard-sidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-logo">
+            <i class="fas fa-warehouse"></i>
+            <span>WMS</span>
+        </div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <div class="nav-section">
+            <h5>Menu</h5>
+            <ul class="nav-list">
+                @foreach (var menu in Model)
+                {
+                    <li class="nav-item">
+                        <a href="@menu.Path" class="nav-link">
+                            <i class="@menu.IconName"></i>
+                            <span>@menu.Name</span>
+                        </a>
+                    </li>
+                }
+            </ul>
+        </div>
+
+        <div class="nav-section">
+            <h5>Ayarlar</h5>
+            <ul class="nav-list">
+                <li class="nav-item">
+                    <a href="@Url.Action("Logout", "Account")" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Çıkış Yap</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</aside>

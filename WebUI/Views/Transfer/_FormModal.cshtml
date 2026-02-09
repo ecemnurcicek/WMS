@@ -1,0 +1,180 @@
+@model Core.Dtos.TransferDto
+@{
+    var brands = ViewBag.Brands as IEnumerable<Core.Dtos.BrandDto> ?? new List<Core.Dtos.BrandDto>();
+    var products = ViewBag.Products as IEnumerable<Core.Dtos.ProductDto> ?? new List<Core.Dtos.ProductDto>();
+    var isAdminOrManager = ViewBag.IsAdminOrManager as bool? ?? false;
+    var userShopId = ViewBag.UserShopId as int?;
+    var userShop = ViewBag.UserShop as Core.Dtos.ShopDto;
+    var userId = ViewBag.UserId as int? ?? 0;
+}
+
+<!-- Form Modal -->
+<div class="modal fade" id="formModal" tabindex="-1" aria-labelledby="formModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="formModalTitle">
+                    <i class="fas fa-plus me-2"></i>Yeni Transfer Talebi
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="transferForm">
+                <div class="modal-body">
+                    <input type="hidden" id="userId" value="@userId" />
+                    <input type="hidden" id="isAdminOrManager" value="@isAdminOrManager.ToString().ToLower()" />
+                    
+                    <div class="row">
+                        @if (isAdminOrManager)
+                        {
+                            <!-- Admin/Manager: Marka seçimi ve mağaza seçimi -->
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-header bg-primary text-white">
+                                        <i class="fas fa-store me-2"></i>Talep Eden (Ürün İsteyen)
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group mb-3">
+                                            <label for="fromBrand">Marka <span class="text-danger">*</span></label>
+                                            <select id="fromBrand" class="form-select" required>
+                                                <option value="">-- Marka Seçiniz --</option>
+                                                @foreach (var brand in brands)
+                                                {
+                                                    <option value="@brand.Id">@brand.Name</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="fromShopId">Mağaza <span class="text-danger">*</span></label>
+                                            <select id="fromShopId" name="FromShopId" class="form-select" required disabled>
+                                                <option value="">-- Önce Marka Seçiniz --</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-header bg-success text-white">
+                                        <i class="fas fa-shipping-fast me-2"></i>Gönderen (Ürün Gönderecek)
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group mb-3">
+                                            <label for="toBrand">Marka <span class="text-danger">*</span></label>
+                                            <select id="toBrand" class="form-select" required>
+                                                <option value="">-- Marka Seçiniz --</option>
+                                                @foreach (var brand in brands)
+                                                {
+                                                    <option value="@brand.Id">@brand.Name</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="toShopId">Mağaza <span class="text-danger">*</span></label>
+                                            <select id="toShopId" name="ToShopId" class="form-select" required disabled>
+                                                <option value="">-- Önce Marka Seçiniz --</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <!-- Normal kullanıcı: FromShop otomatik, sadece ToShop seçimi -->
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-header bg-primary text-white">
+                                        <i class="fas fa-store me-2"></i>Talep Eden (Sizin Mağazanız)
+                                    </div>
+                                    <div class="card-body">
+                                        <input type="hidden" id="fromShopId" name="FromShopId" value="@userShopId" />
+                                        <div class="shop-display">
+                                            <h5>@(userShop?.Name ?? "Mağazanız")</h5>
+                                            <span class="brand-badge">@(userShop?.BrandName ?? "")</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-header bg-success text-white">
+                                        <i class="fas fa-shipping-fast me-2"></i>Gönderen (Ürün Talep Edeceğiniz)
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="form-group mb-3">
+                                            <label for="toBrand">Marka <span class="text-danger">*</span></label>
+                                            <select id="toBrand" class="form-select" required>
+                                                <option value="">-- Marka Seçiniz --</option>
+                                                @foreach (var brand in brands)
+                                                {
+                                                    <option value="@brand.Id">@brand.Name</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="toShopId">Mağaza <span class="text-danger">*</span></label>
+                                            <select id="toShopId" name="ToShopId" class="form-select" required disabled>
+                                                <option value="">-- Önce Marka Seçiniz --</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Ürün Ekleme Bölümü -->
+                    <div class="card">
+                        <div class="card-header bg-info text-white">
+                            <i class="fas fa-boxes me-2"></i>Transfer Edilecek Ürünler
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="productSearch">Ürün Ara (Model, EAN veya Renk)</label>
+                                    <input type="text" id="productSearch" class="form-control" placeholder="Ürün aramak için yazın...">
+                                    <div id="productSearchResults" class="product-search-results"></div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="quantityInput">İstenen Adet</label>
+                                    <input type="number" id="quantityInput" class="form-control" min="1" value="1">
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <button type="button" id="btnAddProduct" class="btn btn-info w-100" disabled>
+                                        <i class="fas fa-plus me-2"></i>Ürün Ekle
+                                    </button>
+                                </div>
+                            </div>
+
+                            <table class="table table-bordered" id="transferDetailsTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Model</th>
+                                        <th>Renk</th>
+                                        <th>Beden</th>
+                                        <th>EAN</th>
+                                        <th>İstenen Adet</th>
+                                        <th style="width: 60px;">Sil</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transferDetailsBody">
+                                    <tr id="noProductRow">
+                                        <td colspan="6" class="text-center text-muted">
+                                            Henüz ürün eklenmedi
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary" id="submitButton">
+                        <i class="fas fa-save me-2"></i>Transfer Oluştur
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
