@@ -19,17 +19,25 @@ namespace WebAPI.Controllers
 
         // Option listesi (Model + Color gruplu)
         [HttpGet("options")]
-        public async Task<IActionResult> GetAllOptions()
+        public async Task<IActionResult> GetAllOptions([FromQuery] int? shopId = null)
         {
-            var options = await _productService.GetAllOptionsAsync();
+            var options = await _productService.GetAllOptionsAsync(shopId: shopId);
             return Ok(options);
+        }
+
+        // Ürün arama - barkod, model, renk, beden, açıklama
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchProducts([FromQuery] string? query = null, [FromQuery] int? brandId = null, [FromQuery] int? shopId = null)
+        {
+            var results = await _productService.SearchProductsAsync(query, brandId, shopId);
+            return Ok(new { success = true, data = results });
         }
 
         // Option detayı (Beden listesi ile)
         [HttpGet("option")]
-        public async Task<IActionResult> GetOptionDetail([FromQuery] string model, [FromQuery] string color)
+        public async Task<IActionResult> GetOptionDetail([FromQuery] string model, [FromQuery] string color, [FromQuery] int? shopId = null)
         {
-            var option = await _productService.GetOptionDetailAsync(model, color);
+            var option = await _productService.GetOptionDetailAsync(model, color, shopId);
             if (option == null)
                 return NotFound();
             return Ok(option);
@@ -37,17 +45,17 @@ namespace WebAPI.Controllers
 
         // Option için mağaza bazlı stok özeti
         [HttpGet("option/stock")]
-        public async Task<IActionResult> GetOptionStockSummary([FromQuery] string model, [FromQuery] string color)
+        public async Task<IActionResult> GetOptionStockSummary([FromQuery] string model, [FromQuery] string color, [FromQuery] int? shopId = null)
         {
-            var stockSummary = await _productService.GetOptionStockSummaryAsync(model, color);
+            var stockSummary = await _productService.GetOptionStockSummaryAsync(model, color, shopId);
             return Ok(stockSummary);
         }
 
         // Option için beden listesi
         [HttpGet("option/sizes")]
-        public async Task<IActionResult> GetSizesByOption([FromQuery] string model, [FromQuery] string color)
+        public async Task<IActionResult> GetSizesByOption([FromQuery] string model, [FromQuery] string color, [FromQuery] int? shopId = null)
         {
-            var sizes = await _productService.GetSizesByOptionAsync(model, color);
+            var sizes = await _productService.GetSizesByOptionAsync(model, color, shopId);
             return Ok(sizes);
         }
 
@@ -118,9 +126,9 @@ namespace WebAPI.Controllers
 
         // ProductShelf endpoints
         [HttpGet("{productId}/shelves")]
-        public async Task<IActionResult> GetProductShelves(int productId)
+        public async Task<IActionResult> GetProductShelves(int productId, [FromQuery] int? shopId = null)
         {
-            var shelves = await _productService.GetProductShelvesAsync(productId);
+            var shelves = await _productService.GetProductShelvesAsync(productId, shopId);
             return Ok(shelves);
         }
 
@@ -157,6 +165,16 @@ namespace WebAPI.Controllers
             if (!result)
                 return NotFound();
             return Ok();
+        }
+
+        // En fazla stok bulunan mağazayı getirir
+        [HttpGet("{productId}/max-stock-shop")]
+        public async Task<IActionResult> GetShopWithMaxStock(int productId, [FromQuery] int? excludeShopId = null)
+        {
+            var shopStock = await _productService.GetShopWithMaxStockAsync(productId, excludeShopId);
+            if (shopStock == null)
+                return NotFound(new { message = "Bu ürün için stok bulunamadı." });
+            return Ok(shopStock);
         }
     }
 }

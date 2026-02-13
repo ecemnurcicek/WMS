@@ -40,6 +40,10 @@ namespace WebUI.Controllers
             HttpContext.Session.SetString("UserEmail", result.UserEmail);
             HttpContext.Session.SetString("UserRoles", string.Join(",", result.Roles));
             HttpContext.Session.SetString("UserRoleIds", string.Join(",", result.RoleIds));
+            if (result.ShopId.HasValue)
+                HttpContext.Session.SetInt32("UserShopId", result.ShopId.Value);
+            if (result.BrandId.HasValue)
+                HttpContext.Session.SetInt32("UserBrandId", result.BrandId.Value);
 
             await _logService.LogInfoAsync($"Kullanıcı {result.UserEmail} başarıyla giriş yaptı.", nameof(AccountController), result.UserId);
             _logger.LogInformation($"Kullanıcı {result.UserEmail} başarıyla giriş yaptı.");

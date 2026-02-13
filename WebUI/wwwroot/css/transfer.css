@@ -449,6 +449,61 @@
   max-width: 60px;
 }
 
+/* Copy Icon */
+.transfer-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.copy-icon {
+  cursor: pointer;
+  color: #6c757d;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  padding: 2px;
+}
+
+.copy-icon:hover {
+  color: #0d6efd;
+  transform: scale(1.15);
+}
+
+.copy-icon:active {
+  transform: scale(0.95);
+}
+
+.copy-icon.copy-success {
+  color: #198754 !important;
+  animation: pulse 0.3s ease;
+}
+
+.copy-icon.copy-error {
+  color: #dc3545 !important;
+  animation: shake 0.3s ease;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .transfer-filters {
@@ -467,5 +522,9 @@
   
   .action-buttons {
     flex-direction: column;
+  }
+  
+  .copy-icon {
+    font-size: 12px;
   }
 }

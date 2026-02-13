@@ -224,7 +224,9 @@ public class ApplicationContext : IdentityDbContext<ApplicationUser, Application
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.BirthDate).HasColumnName("BirthDate");
             entity.Property(e => e.ShopId).HasColumnName("ShopId");
+            entity.Property(e => e.BrandId).HasColumnName("BrandId");
             entity.HasOne(e => e.Shop).WithMany(s => s.Users).HasForeignKey(e => e.ShopId).IsRequired(false);
+            entity.HasOne(e => e.Brand).WithMany(b => b.Users).HasForeignKey(e => e.BrandId).IsRequired(false);
 
         });
 

@@ -33,7 +33,15 @@ namespace WebUI.Controllers
             if (!response.IsSuccessStatusCode)
                 return View(new List<ShopDto>());
 
-            var shops = await response.Content.ReadFromJsonAsync<IEnumerable<ShopDto>>();
+            var allShops = await response.Content.ReadFromJsonAsync<IEnumerable<ShopDto>>();
+            
+            // Marka Sorumlusu ise sadece kendi markasındaki mağazaları görsün
+            var userRoles = HttpContext.Session.GetString("UserRoles") ?? "";
+            IEnumerable<ShopDto> shops = allShops ?? new List<ShopDto>();
+            if (IsBrandManager(userRoles) && user?.BrandId.HasValue == true)
+            {
+                shops = shops.Where(s => s.BrandId == user.BrandId.Value);
+            }
 
             // Bölgeleri al
             var regionResponse = await _httpClient.GetAsync("/api/region");
@@ -200,6 +208,14 @@ namespace WebUI.Controllers
                 return Json(new { success = true, message = "Mağaza başarıyla silindi." });
             
             return Json(new { success = false, message = "Bir hata oluştu." });
+        }
+
+        private bool IsBrandManager(string userRoles)
+        {
+            var roles = userRoles.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            return roles.Any(r => 
+                r.Equals("Marka Sorumlusu", StringComparison.OrdinalIgnoreCase) ||
+                r.Equals("BrandManager", StringComparison.OrdinalIgnoreCase));
         }
     }
 }

@@ -122,6 +122,18 @@ namespace WebUI.Controllers
                 ViewBag.Shops = new List<ShopDto>();
             }
 
+            // Markaları al
+            var brandResponse = await _httpClient.GetAsync("/api/brand");
+            if (brandResponse.IsSuccessStatusCode)
+            {
+                var brands = await brandResponse.Content.ReadFromJsonAsync<IEnumerable<BrandDto>>();
+                ViewBag.Brands = brands ?? new List<BrandDto>();
+            }
+            else
+            {
+                ViewBag.Brands = new List<BrandDto>();
+            }
+
             // Rolleri al
             var roleResponse = await _httpClient.GetAsync("/api/user/roles");
             if (roleResponse.IsSuccessStatusCode)

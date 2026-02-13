@@ -78,6 +78,11 @@ namespace Business.Interfaces
         /// Transfer detayı siler
         /// </summary>
         Task<bool> DeleteDetailAsync(int detailId);
+
+        /// <summary>
+        /// Hızlı transfer talebi oluşturur (tek ürün için)
+        /// </summary>
+        Task<int> CreateQuickTransferAsync(int fromShopId, int toShopId, int productId, int quantity, int userId);
     }
 }
 

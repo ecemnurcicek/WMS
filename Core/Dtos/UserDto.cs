@@ -10,6 +10,7 @@ namespace Core.Dtos
     {
         public int Id { get; set; }
         public int? ShopId { get; set; }
+        public int? BrandId { get; set; }
         public string Name { get; set; } = null!;
         public string Email { get; set; } = null!;
         public string Phone { get; set; } = null!;

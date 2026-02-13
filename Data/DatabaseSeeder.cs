@@ -114,10 +114,19 @@ public static class DatabaseSeeder
             },
             new Menu
             {
+                Name = "Giriş Alanı",
+                Path = "/EntryArea",
+                IconName = "fas fa-warehouse",
+                DisplayOrder = 11,
+                IsActive = true,
+                CreatedAt = DateTime.Now
+            },
+            new Menu
+            {
                 Name = "Kullanıcılar",
                 Path = "/User",
                 IconName = "fas fa-users",
-                DisplayOrder = 11,
+                DisplayOrder = 12,
                 IsActive = true,
                 CreatedAt = DateTime.Now
             }
@@ -127,32 +136,36 @@ public static class DatabaseSeeder
         await context.Menus.AddRangeAsync(menus);
         await context.SaveChangesAsync();
 
-        // Assign menus to roles
-        // Kullanıcılar menu is admin-only, others are assigned to all roles
+        // Assign menus to roles based on role-menu map
+        var roleMenuMap = GetRoleMenuMap();
         var menuRoles = new List<MenuRole>();
         foreach (var menu in menus)
         {
-            if (menu.Path == "/User")
+            foreach (var role in roles)
             {
-                // Sadece Admin rolüne ata
-                if (adminRole != null)
+                bool shouldAssign;
+
+                if (role.Name.Contains("Admin"))
                 {
-                    menuRoles.Add(new MenuRole
-                    {
-                        MenuId = menu.Id,
-                        RoleId = adminRole.Id,
-                        CreatedAt = DateTime.Now
-                    });
+                    // Admin tüm menülere erişir
+                    shouldAssign = true;
                 }
-            }
-            else
-            {
-                foreach (var roleId in allRoleIds)
+                else if (roleMenuMap.TryGetValue(role.Name, out var allowedPaths))
+                {
+                    shouldAssign = allowedPaths.Contains(menu.Path);
+                }
+                else
+                {
+                    // Tanımlanmamış roller sadece Dashboard görür
+                    shouldAssign = menu.Path == "/Dashboard";
+                }
+
+                if (shouldAssign)
                 {
                     menuRoles.Add(new MenuRole
                     {
                         MenuId = menu.Id,
-                        RoleId = roleId,
+                        RoleId = role.Id,
                         CreatedAt = DateTime.Now
                     });
                 }
@@ -200,5 +213,158 @@ public static class DatabaseSeeder
 
         await context.MenuRoles.AddAsync(menuRole);
         await context.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Mevcut veritabanına "Giriş Alanı" menüsünü ekler (yoksa).
+    /// Tüm rollere atanır.
+    /// </summary>
+    public static async Task EnsureEntryAreaMenuAsync(ApplicationContext context)
+    {
+        var exists = await context.Menus.AnyAsync(m => m.Path == "/EntryArea");
+        if (exists) return;
+
+        var menu = new Menu
+        {
+            Name = "Giriş Alanı",
+            Path = "/EntryArea",
+            IconName = "fas fa-warehouse",
+            DisplayOrder = 11,
+            IsActive = true,
+            CreatedAt = DateTime.Now
+        };
+
+        await context.Menus.AddAsync(menu);
+        await context.SaveChangesAsync();
+
+        // Tüm rollere ata
+        var allRoles = await context.Set<Role>().ToListAsync();
+        var menuRoles = new List<MenuRole>();
+        
+        foreach (var role in allRoles)
+        {
+            menuRoles.Add(new MenuRole
+            {
+                MenuId = menu.Id,
+                RoleId = role.Id,
+                CreatedAt = DateTime.Now
+            });
+        }
+
+        if (menuRoles.Any())
+        {
+            await context.MenuRoles.AddRangeAsync(menuRoles);
+            await context.SaveChangesAsync();
+        }
+    }
+
+    /// <summary>
+    /// Tüm roller için MenuRole kayıtlarını doğru şekilde senkronize eder.
+    /// Her rolün sadece erişmesi gereken menülere erişimini sağlar.
+    /// Fazla veya eksik kayıtları düzeltir.
+    /// </summary>
+    public static async Task EnsureMenuRolesForAllRolesAsync(ApplicationContext context)
+    {
+        var allRoles = await context.Set<Role>().ToListAsync();
+        var allMenus = await context.Menus.ToListAsync();
+
+        if (!allRoles.Any() || !allMenus.Any()) return;
+
+        // Rol bazlı erişilebilir menü path'leri tanımla
+        var roleMenuMap = GetRoleMenuMap();
+
+        foreach (var role in allRoles)
+        {
+            // Bu rol için izin verilen menü path'lerini belirle
+            List<string> allowedPaths;
+            if (role.Name.Contains("Admin"))
+            {
+                // Admin tüm menülere erişir
+                allowedPaths = allMenus.Select(m => m.Path).ToList();
+            }
+            else if (roleMenuMap.TryGetValue(role.Name, out var paths))
+            {
+                allowedPaths = paths;
+            }
+            else
+            {
+                // Tanımlanmamış roller sadece Dashboard görür
+                allowedPaths = new List<string> { "/Dashboard" };
+            }
+
+            // Bu rolün mevcut MenuRole kayıtlarını al
+            var existingMenuRoles = await context.MenuRoles
+                .Where(mr => mr.RoleId == role.Id)
+                .ToListAsync();
+
+            // Fazla kayıtları sil (bu rolün erişmemesi gereken menüler)
+            var toRemove = existingMenuRoles
+                .Where(mr =>
+                {
+                    var menu = allMenus.FirstOrDefault(m => m.Id == mr.MenuId);
+                    return menu != null && !allowedPaths.Contains(menu.Path);
+                })
+                .ToList();
+
+            if (toRemove.Any())
+            {
+                context.MenuRoles.RemoveRange(toRemove);
+            }
+
+            // Eksik kayıtları ekle
+            var existingMenuIds = existingMenuRoles.Select(mr => mr.MenuId).ToHashSet();
+            var menusToAdd = allMenus
+                .Where(m => allowedPaths.Contains(m.Path) && !existingMenuIds.Contains(m.Id))
+                .ToList();
+
+            foreach (var menu in menusToAdd)
+            {
+                context.MenuRoles.Add(new MenuRole
+                {
+                    MenuId = menu.Id,
+                    RoleId = role.Id,
+                    CreatedAt = DateTime.Now
+                });
+            }
+        }
+
+        await context.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Her rol için erişilebilir menü path'lerini tanımlar.
+    /// Admin rolü burada tanımlanmaz çünkü tüm menülere erişir.
+    /// Yeni bir rol eklendiğinde buraya tanım eklenmeli.
+    /// </summary>
+    private static Dictionary<string, List<string>> GetRoleMenuMap()
+    {
+        return new Dictionary<string, List<string>>
+        {
+            ["Marka Sorumlusu"] = new List<string>
+            {
+                "/Dashboard",
+                "/Brand",
+                "/Product",
+                "/Transfer",
+                "/EntryArea"
+            },
+            ["Mağaza Sorumlusu"] = new List<string>
+            {
+                "/Dashboard",
+                "/Shop",
+                "/WareHouse",
+                "/Shelf",
+                "/Product",
+                "/Transfer",
+                "/EntryArea"
+            },
+            ["Satış Temsilcisi"] = new List<string>
+            {
+                "/Dashboard",
+                "/Product",
+                "/Transfer",
+                "/EntryArea"
+            }
+        };
     }
 }

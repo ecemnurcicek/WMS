@@ -22,10 +22,12 @@ namespace Business.Services
         // ==================== Option Bazlı Metodlar ====================
 
         // Option bazlı listeleme (Model + Color gruplu)
-        public async Task<List<ProductOptionDto>> GetAllOptionsAsync(bool pActive = false)
+        public async Task<List<ProductOptionDto>> GetAllOptionsAsync(bool pActive = false, int? shopId = null)
         {
             var query = _context.Products
                 .Include(p => p.ProductShelves)
+                    .ThenInclude(ps => ps.Shelf)
+                        .ThenInclude(s => s!.Warehouse)
                 .AsQueryable();
 
             if (pActive)
@@ -43,7 +45,11 @@ namespace Business.Services
                     Description = g.First().Description,
                     Price = g.First().Price ?? 0m,
                     SizeCount = g.Count(),
-                    TotalStock = g.Sum(p => p.ProductShelves.Sum(ps => ps.Quantity)),
+                    TotalStock = shopId.HasValue
+                        ? g.Sum(p => p.ProductShelves
+                            .Where(ps => ps.Shelf != null && ps.Shelf.Warehouse != null && ps.Shelf.Warehouse.ShopId == shopId.Value)
+                            .Sum(ps => ps.Quantity))
+                        : g.Sum(p => p.ProductShelves.Sum(ps => ps.Quantity)),
                     IsActive = g.Any(p => p.IsActive)
                 })
                 .OrderBy(o => o.Model)
@@ -54,10 +60,12 @@ namespace Business.Services
         }
 
         // Option detayı (Model + Color için tüm bedenler)
-        public async Task<ProductOptionDetailDto?> GetOptionDetailAsync(string model, string color)
+        public async Task<ProductOptionDetailDto?> GetOptionDetailAsync(string model, string color, int? shopId = null)
         {
             var products = await _context.Products
                 .Include(p => p.ProductShelves)
+                    .ThenInclude(ps => ps.Shelf)
+                        .ThenInclude(s => s!.Warehouse)
                 .Where(p => p.Model == model && p.Color == color)
                 .ToListAsync();
 
@@ -82,25 +90,35 @@ namespace Business.Services
                     Size = p.Size ?? string.Empty,
                     Ean = p.Ean ?? string.Empty,
                     Price = p.Price ?? 0m,
-                    TotalStock = p.ProductShelves.Sum(ps => ps.Quantity),
+                    TotalStock = shopId.HasValue
+                        ? p.ProductShelves
+                            .Where(ps => ps.Shelf != null && ps.Shelf.Warehouse != null && ps.Shelf.Warehouse.ShopId == shopId.Value)
+                            .Sum(ps => ps.Quantity)
+                        : p.ProductShelves.Sum(ps => ps.Quantity),
                     IsActive = p.IsActive
                 }).OrderBy(s => s.Size).ToList()
             };
         }
 
         // Option için mağaza bazlı stok özeti
-        public async Task<List<ProductStockSummaryDto>> GetOptionStockSummaryAsync(string model, string color)
+        public async Task<List<ProductStockSummaryDto>> GetOptionStockSummaryAsync(string model, string color, int? shopId = null)
         {
             var productIds = await _context.Products
                 .Where(p => p.Model == model && p.Color == color)
                 .Select(p => p.Id)
                 .ToListAsync();
 
-            var stockSummary = await _context.ProductShelves
+            var query = _context.ProductShelves
                 .Include(ps => ps.Shelf)
                     .ThenInclude(s => s!.Warehouse)
                         .ThenInclude(w => w!.Shop)
-                .Where(ps => productIds.Contains(ps.ProductId))
+                .Where(ps => productIds.Contains(ps.ProductId));
+
+            // Eğer shopId verilmişse sadece o mağazayı filtrele
+            if (shopId.HasValue)
+                query = query.Where(ps => ps.Shelf!.Warehouse!.ShopId == shopId.Value);
+
+            var stockSummary = await query
                 .GroupBy(ps => new { ps.Shelf!.Warehouse!.ShopId, ps.Shelf.Warehouse.Shop!.Name })
                 .Select(g => new ProductStockSummaryDto
                 {
@@ -115,10 +133,12 @@ namespace Business.Services
         }
 
         // Option için beden listesi
-        public async Task<List<ProductSizeDto>> GetSizesByOptionAsync(string model, string color)
+        public async Task<List<ProductSizeDto>> GetSizesByOptionAsync(string model, string color, int? shopId = null)
         {
-            return await _context.Products
+            var products = await _context.Products
                 .Include(p => p.ProductShelves)
+                    .ThenInclude(ps => ps.Shelf)
+                        .ThenInclude(s => s!.Warehouse)
                 .Where(p => p.Model == model && p.Color == color)
                 .Select(p => new ProductSizeDto
                 {
@@ -128,11 +148,17 @@ namespace Business.Services
                     Size = p.Size ?? string.Empty,
                     Ean = p.Ean ?? string.Empty,
                     Price = p.Price ?? 0m,
-                    TotalStock = p.ProductShelves.Sum(ps => ps.Quantity),
+                    TotalStock = shopId.HasValue
+                        ? p.ProductShelves
+                            .Where(ps => ps.Shelf != null && ps.Shelf.Warehouse != null && ps.Shelf.Warehouse.ShopId == shopId.Value)
+                            .Sum(ps => ps.Quantity)
+                        : p.ProductShelves.Sum(ps => ps.Quantity),
                     IsActive = p.IsActive
                 })
-                .OrderBy(s => s.Size)
+                .OrderBy(p => p.Size)
                 .ToListAsync();
+
+            return products;
         }
 
         // ==================== Mevcut Metodlar ====================
@@ -278,16 +304,24 @@ namespace Business.Services
         }
 
         // ProductShelf methods
-        public async Task<List<ProductShelfDetailDto>> GetProductShelvesAsync(int productId)
+        public async Task<List<ProductShelfDetailDto>> GetProductShelvesAsync(int productId, int? shopId = null)
         {
-            return await _context.ProductShelves
+            var query = _context.ProductShelves
                 .Include(ps => ps.Shelf)
                     .ThenInclude(s => s!.Warehouse)
                         .ThenInclude(w => w!.Shop)
                             .ThenInclude(sh => sh!.Town)
                                 .ThenInclude(t => t!.City)
                                     .ThenInclude(c => c!.Region)
-                .Where(ps => ps.ProductId == productId)
+                .Where(ps => ps.ProductId == productId);
+
+            // Eğer shopId belirtilmişse sadece o mağazanın raflarını getir
+            if (shopId.HasValue)
+            {
+                query = query.Where(ps => ps.Shelf != null && ps.Shelf.Warehouse != null && ps.Shelf.Warehouse.ShopId == shopId.Value);
+            }
+
+            return await query
                 .Select(ps => new ProductShelfDetailDto
                 {
                     Id = ps.Id,
@@ -401,6 +435,142 @@ namespace Business.Services
             await _context.SaveChangesAsync();
 
             return true;
+        }
+
+        public async Task<ShopStockDto?> GetShopWithMaxStockAsync(int productId, int? excludeShopId = null)
+        {
+            var query = _context.ProductShelves
+                .Include(ps => ps.Shelf)
+                    .ThenInclude(s => s!.Warehouse)
+                        .ThenInclude(w => w!.Shop)
+                .Where(ps => ps.ProductId == productId && 
+                            ps.Shelf != null && 
+                            ps.Shelf.Warehouse != null && 
+                            ps.Shelf.Warehouse.Shop != null);
+
+            if (excludeShopId.HasValue)
+            {
+                query = query.Where(ps => ps.Shelf!.Warehouse!.ShopId != excludeShopId.Value);
+            }
+
+            var productShelves = await query.ToListAsync();
+
+            if (!productShelves.Any())
+                return null;
+
+            var shopStocks = productShelves
+                .GroupBy(ps => new
+                {
+                    ShopId = ps.Shelf!.Warehouse!.ShopId,
+                    ShopName = ps.Shelf!.Warehouse!.Shop!.Name
+                })
+                .Select(g => new ShopStockDto
+                {
+                    ShopId = g.Key.ShopId,
+                    ShopName = g.Key.ShopName,
+                    TotalStock = g.Sum(ps => ps.Quantity)
+                })
+                .OrderByDescending(s => s.TotalStock)
+                .FirstOrDefault();
+
+            return shopStocks;
+        }
+
+        /// <summary>
+        /// Ürün arama - barkod, model, renk, beden, açıklama ile arama yapar
+        /// Mağaza bazlı stok bilgilerini döner
+        /// </summary>
+        public async Task<List<ProductSearchResultDto>> SearchProductsAsync(string? query = null, int? brandId = null, int? shopId = null)
+        {
+            var productsQuery = _context.Products
+                .Include(p => p.ProductShelves)
+                    .ThenInclude(ps => ps.Shelf)
+                        .ThenInclude(s => s!.Warehouse)
+                            .ThenInclude(w => w!.Shop)
+                                .ThenInclude(sh => sh!.Brand)
+                .Where(p => p.IsActive)
+                .AsQueryable();
+
+            // Arama sorgusu
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var searchTerm = query.Trim().ToLower();
+                productsQuery = productsQuery.Where(p =>
+                    (p.Ean != null && p.Ean.ToLower().Contains(searchTerm)) ||
+                    (p.Model != null && p.Model.ToLower().Contains(searchTerm)) ||
+                    (p.Color != null && p.Color.ToLower().Contains(searchTerm)) ||
+                    (p.Size != null && p.Size.ToLower().Contains(searchTerm)) ||
+                    (p.Description != null && p.Description.ToLower().Contains(searchTerm))
+                );
+            }
+
+            var products = await productsQuery.ToListAsync();
+
+            // Marka filtresi (ProductShelves üzerinden)
+            if (brandId.HasValue)
+            {
+                products = products
+                    .Where(p => p.ProductShelves.Any(ps =>
+                        ps.Shelf != null &&
+                        ps.Shelf.Warehouse != null &&
+                        ps.Shelf.Warehouse.Shop != null &&
+                        ps.Shelf.Warehouse.Shop.BrandId == brandId.Value))
+                    .ToList();
+            }
+
+            // Mağaza filtresi (ProductShelves üzerinden)
+            if (shopId.HasValue)
+            {
+                products = products
+                    .Where(p => p.ProductShelves.Any(ps =>
+                        ps.Shelf != null &&
+                        ps.Shelf.Warehouse != null &&
+                        ps.Shelf.Warehouse.ShopId == shopId.Value))
+                    .ToList();
+            }
+
+            var results = new List<ProductSearchResultDto>();
+
+            foreach (var product in products)
+            {
+                var shopStocks = product.ProductShelves
+                    .Where(ps => ps.Shelf != null &&
+                                 ps.Shelf.Warehouse != null &&
+                                 ps.Shelf.Warehouse.Shop != null)
+                    .GroupBy(ps => new
+                    {
+                        ShopId = ps.Shelf!.Warehouse!.ShopId,
+                        ShopName = ps.Shelf!.Warehouse!.Shop!.Name,
+                        BrandName = ps.Shelf!.Warehouse!.Shop!.Brand!.Name
+                    })
+                    .Select(g => new ShopStockInfoDto
+                    {
+                        ShopId = g.Key.ShopId,
+                        ShopName = g.Key.ShopName,
+                        BrandName = g.Key.BrandName,
+                        TotalStock = g.Sum(ps => ps.Quantity)
+                    })
+                    .OrderByDescending(s => s.TotalStock)
+                    .ToList();
+
+                // Sadece stok varsa ekle
+                if (shopStocks.Any(s => s.TotalStock > 0))
+                {
+                    results.Add(new ProductSearchResultDto
+                    {
+                        ProductId = product.Id,
+                        Barcode = product.Ean ?? "",
+                        Model = product.Model ?? "",
+                        Color = product.Color ?? "",
+                        Size = product.Size ?? "",
+                        Description = product.Description ?? "",
+                        CoverUrl = product.CoverUrl,
+                        ShopStocks = shopStocks
+                    });
+                }
+            }
+
+            return results;
         }
     }
 }

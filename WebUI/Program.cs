@@ -32,6 +32,8 @@ builder.Services.AddScoped<IBusinessManager, BusinessManager>();
 builder.Services.AddScoped<IRegionService, RegionService>();
 builder.Services.AddScoped<IMenuService, MenuService>();
 builder.Services.AddScoped<IMenuRoleService, MenuRoleService>();
+builder.Services.AddScoped<IShelfService, ShelfService>();
+builder.Services.AddScoped<IEntryAreaService, EntryAreaService>();
 
 // Add HttpClient for WebAPI communication
 var apiBaseUrl = builder.Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7234";
@@ -58,6 +60,8 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
     await Data.DatabaseSeeder.SeedMenusAsync(context);
     await Data.DatabaseSeeder.EnsureUserMenuAsync(context);
+    await Data.DatabaseSeeder.EnsureEntryAreaMenuAsync(context);
+    await Data.DatabaseSeeder.EnsureMenuRolesForAllRolesAsync(context);
 }
 
 // Configure the HTTP request pipeline.

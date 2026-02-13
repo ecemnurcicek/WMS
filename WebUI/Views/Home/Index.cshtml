@@ -54,15 +54,52 @@
 
 <div class="search-section">
     <div class="search-card">
-        <h5>
-            <i class="fas fa-barcode me-2"></i>Hızlı Ürün Arama
-        </h5>
-        <form class="search-form" method="get" action="@Url.Action("Search", "Product")">
-            <input type="text" class="form-control form-control-lg" name="query" placeholder="Ürün kodu veya barkod (EAN) girin..." />
-            <button type="submit" class="btn btn-primary btn-lg">
-                <i class="fas fa-search me-2"></i>Ara
-            </button>
-        </form>
+        <div class="search-card-inner">
+            <h5>
+                <i class="fas fa-barcode me-2"></i>Hızlı Ürün Arama
+            </h5>
+            <p class="search-subtitle">Barkod, model, renk veya açıklama ile arama yaparak stok durumunu anında görüntüleyin</p>
+
+            <div class="search-input-wrapper">
+                <select class="search-brand-select" id="searchBrandId">
+                    <option value="">Tüm Markalar</option>
+                    @foreach (var brand in ViewBag.Brands as List<Core.Dtos.BrandDto> ?? new List<Core.Dtos.BrandDto>())
+                    {
+                        <option value="@brand.Id">@brand.Name</option>
+                    }
+                </select>
+                <input type="text" class="form-control" id="searchQuery" placeholder="Barkod, model, renk veya açıklama ile arayın..." />
+                <button type="button" class="btn-search" id="btnSearchProduct">
+                    <i class="fas fa-search"></i>Ara
+                </button>
+            </div>
+            <span class="search-hint">
+                <i class="fas fa-info-circle me-1"></i>
+                EAN kodu, model adı, renk, beden veya açıklama ile arama yapabilirsiniz
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Arama Sonuç Modal -->
+<div class="modal fade" id="searchResultModal" tabindex="-1" aria-labelledby="searchResultModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="searchResultModalLabel">
+                    <i class="fas fa-search-location me-2"></i>Arama Sonuçları
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="searchResultContent">
+                <!-- Sonuçlar buraya yüklenecek -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Kapat
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -73,3 +110,147 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 </div>
+
+@section Scripts {
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const btnSearch = document.getElementById('btnSearchProduct');
+        const searchQuery = document.getElementById('searchQuery');
+        // Enter tuşu ile arama
+        searchQuery.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                btnSearch.click();
+            }
+        });
+        
+        // Arama butonu
+        btnSearch.addEventListener('click', async function() {
+            const query = searchQuery.value.trim();
+            const brandId = document.getElementById('searchBrandId').value;
+            
+            if (!query && !brandId) {
+                alert('Lütfen en az bir arama kriteri girin.');
+                return;
+            }
+            
+            // Buton disable
+            const btn = this;
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Aranıyor...';
+            
+            try {
+                // API çağrısı
+                const params = new URLSearchParams();
+                if (query) params.append('query', query);
+                if (brandId) params.append('brandId', brandId);
+                
+                const response = await fetch(`/Home/SearchProducts?${params.toString()}`);
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    showSearchResults(result.data);
+                } else {
+                    showNoResults();
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Arama sırasında bir hata oluştu: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        });
+    });
+    
+    function showSearchResults(products) {
+        if (!products || products.length === 0) {
+            showNoResults();
+            return;
+        }
+        
+        let html = `
+            <div class="alert alert-success mb-3">
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>${products.length}</strong> ürün bulundu
+            </div>
+        `;
+        
+        products.forEach(product => {
+            const imgHtml = product.coverUrl 
+                ? `<img src="${product.coverUrl}" alt="${product.model}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;border:1px solid #eee;">` 
+                : `<div style="width:80px;height:80px;border-radius:8px;background:#f0f1f8;display:flex;align-items:center;justify-content:center;"><i class="fas fa-box-open fa-2x text-muted"></i></div>`;
+
+            html += `
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start gap-3 mb-3">
+                            ${imgHtml}
+                            <div class="flex-grow-1">
+                                <h6 class="card-title mb-1">
+                                    <i class="fas fa-box me-2 text-primary"></i>
+                                    <strong>${product.model}</strong> - ${product.color} - ${product.size}
+                                </h6>
+                                <div class="text-muted" style="font-size:13px;">
+                                    <span class="me-3"><i class="fas fa-barcode me-1"></i>${product.barcode || '-'}</span>
+                                    ${product.description ? `<span><i class="fas fa-info-circle me-1"></i>${product.description}</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <h6 class="text-primary mb-2">
+                            <i class="fas fa-store me-2"></i>Mağaza Stokları
+                        </h6>
+            `;
+            
+            if (product.shopStocks && product.shopStocks.length > 0) {
+                html += '<div class="table-responsive">';
+                html += '<table class="table table-sm table-hover mb-0">';
+                html += '<thead><tr><th>Mağaza</th><th>Marka</th><th class="text-end">Stok</th></tr></thead>';
+                html += '<tbody>';
+                
+                product.shopStocks.forEach(shop => {
+                    html += `
+                        <tr>
+                            <td><i class="fas fa-map-marker-alt me-1 text-danger"></i>${shop.shopName}</td>
+                            <td><span class="badge bg-info">${shop.brandName}</span></td>
+                            <td class="text-end"><strong class="text-success">${shop.totalStock} adet</strong></td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table></div>';
+            } else {
+                html += '<p class="text-muted mb-0">Stok bulunamadı</p>';
+            }
+            
+            html += `
+                    </div>
+                </div>
+            `;
+        });
+        
+        document.getElementById('searchResultContent').innerHTML = html;
+        const modal = new bootstrap.Modal(document.getElementById('searchResultModal'));
+        modal.show();
+    }
+    
+    function showNoResults() {
+        const html = `
+            <div class="text-center py-5">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Ürün Bulunamadı</h5>
+                <p class="text-muted">
+                    Arama kriterlerinize uygun ürün bulunamadı.<br>
+                    Lütfen farklı bir terim ile tekrar deneyin.
+                </p>
+            </div>
+        `;
+        
+        document.getElementById('searchResultContent').innerHTML = html;
+        const modal = new bootstrap.Modal(document.getElementById('searchResultModal'));
+        modal.show();
+    }
+</script>
+}

@@ -8,4 +8,5 @@ public class Brand
 
     // Navigation properties
     public virtual ICollection<Shop> Shops { get; set; } = new List<Shop>();
+    public virtual ICollection<User> Users { get; set; } = new List<User>();
 }

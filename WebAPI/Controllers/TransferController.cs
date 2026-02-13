@@ -163,6 +163,29 @@ namespace WebAPI.Controllers
                 return NotFound();
             return Ok();
         }
+
+        /// <summary>
+        /// Hızlı transfer talebi oluşturur (tek ürün için)
+        /// </summary>
+        [HttpPost("quick")]
+        public async Task<IActionResult> CreateQuickTransfer([FromBody] QuickTransferRequest request)
+        {
+            try
+            {
+                var transferId = await _transferService.CreateQuickTransferAsync(
+                    request.FromShopId,
+                    request.ToShopId,
+                    request.ProductId,
+                    request.Quantity,
+                    request.UserId
+                );
+                return Ok(new { transferId, message = "Transfer talebi başarıyla oluşturuldu." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 
     // Request models
@@ -176,5 +199,14 @@ namespace WebAPI.Controllers
     {
         public int Status { get; set; }
         public int UpdatedBy { get; set; }
+    }
+
+    public class QuickTransferRequest
+    {
+        public int FromShopId { get; set; }
+        public int ToShopId { get; set; }
+        public int ProductId { get; set; }
+        public int Quantity { get; set; }
+        public int UserId { get; set; }
     }
 }

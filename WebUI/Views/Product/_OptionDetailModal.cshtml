@@ -102,12 +102,17 @@
                                                 </td>
                                                 <td class="text-center">
                                                     <div class="btn-group btn-group-sm">
+                                                        <button class="btn btn-outline-warning" 
+                                                                onclick="handleQuickTransferForSize(@size.Id)" 
+                                                                title="Transfer Talep Et">
+                                                            <i class="fas fa-truck"></i>
+                                                        </button>
                                                         <button class="btn btn-outline-primary" 
                                                                 onclick="openProductShelfModal(@size.Id)" 
                                                                 title="Raf Ataması">
                                                             <i class="fas fa-warehouse"></i>
                                                         </button>
-                                                        <button class="btn btn-outline-warning" 
+                                                        <button class="btn btn-outline-info" 
                                                                 onclick="editSize(@size.Id)" 
                                                                 title="Düzenle">
                                                             <i class="fas fa-edit"></i>
@@ -160,6 +165,41 @@
 <!-- Gizli alan: Model ve Color değerleri -->
 <input type="hidden" id="currentOptionModel" value="@Model.Model" />
 <input type="hidden" id="currentOptionColor" value="@Model.Color" />
+
+<!-- Quick Transfer Quantity Modal -->
+<div class="modal fade" id="quickTransferModal" tabindex="-1" aria-labelledby="quickTransferModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="quickTransferModalLabel">
+                    <i class="fas fa-truck me-2"></i>Transfer Talebi Oluştur
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <strong id="transferShopName"></strong> mağazasında 
+                    <strong id="transferAvailableStock"></strong> adet stok bulunmaktadır.
+                </div>
+                <div class="mb-3">
+                    <label for="transferQuantity" class="form-label">Kaç adet talep etmek istiyorsunuz?</label>
+                    <input type="number" class="form-control form-control-lg" id="transferQuantity" 
+                           min="1" value="1" placeholder="Miktar girin">
+                    <div class="form-text">Maksimum: <span id="transferMaxQuantity"></span> adet</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>İptal
+                </button>
+                <button type="button" class="btn btn-warning" id="btnConfirmTransfer">
+                    <i class="fas fa-check me-1"></i>Transfer Talebi Oluştur
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
 // Option detail modal açıldığında stok özetini yükle

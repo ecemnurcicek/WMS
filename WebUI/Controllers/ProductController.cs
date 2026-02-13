@@ -29,9 +29,17 @@ namespace WebUI.Controllers
             ViewData["Title"] = "Ürün Yönetimi";
             ViewData["UserName"] = user?.Name ?? "Kullanıcı";
             ViewData["UserEmail"] = user?.Email ?? "email@example.com";
+            ViewData["UserId"] = userIdObj.Value;
+            ViewData["UserShopId"] = user?.ShopId;
+
+            // Kullanıcının ShopId'si varsa sadece o mağazanın stokunu göster
+            var shopId = user?.ShopId;
+            var url = shopId.HasValue 
+                ? $"/api/product/options?shopId={shopId.Value}" 
+                : "/api/product/options";
 
             // Option bazlı listeleme
-            var response = await _httpClient.GetAsync("/api/product/options");
+            var response = await _httpClient.GetAsync(url);
             if (!response.IsSuccessStatusCode)
                 return View(new List<ProductOptionDto>());
 
@@ -43,10 +51,21 @@ namespace WebUI.Controllers
         [HttpGet]
         public async Task<IActionResult> OptionDetailModal(string model, string color)
         {
+            var userIdObj = HttpContext.Session.GetInt32("UserId");
+            if (!userIdObj.HasValue)
+                return Unauthorized();
+
+            var user = await _userService.GetUserByIdAsync(userIdObj.Value);
+            var shopId = user?.ShopId;
+
             var encodedModel = Uri.EscapeDataString(model ?? "");
             var encodedColor = Uri.EscapeDataString(color ?? "");
             
-            var response = await _httpClient.GetAsync($"/api/product/option?model={encodedModel}&color={encodedColor}");
+            var url = shopId.HasValue
+                ? $"/api/product/option?model={encodedModel}&color={encodedColor}&shopId={shopId.Value}"
+                : $"/api/product/option?model={encodedModel}&color={encodedColor}";
+
+            var response = await _httpClient.GetAsync(url);
             if (!response.IsSuccessStatusCode)
                 return NotFound();
 
@@ -73,10 +92,21 @@ namespace WebUI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetOptionStockSummary(string model, string color)
         {
+            var userIdObj = HttpContext.Session.GetInt32("UserId");
+            if (!userIdObj.HasValue)
+                return Json(new List<ProductStockSummaryDto>());
+
+            var user = await _userService.GetUserByIdAsync(userIdObj.Value);
+            var shopId = user?.ShopId;
+
             var encodedModel = Uri.EscapeDataString(model ?? "");
             var encodedColor = Uri.EscapeDataString(color ?? "");
             
-            var response = await _httpClient.GetAsync($"/api/product/option/stock?model={encodedModel}&color={encodedColor}");
+            var url = shopId.HasValue
+                ? $"/api/product/option/stock?model={encodedModel}&color={encodedColor}&shopId={shopId.Value}"
+                : $"/api/product/option/stock?model={encodedModel}&color={encodedColor}";
+
+            var response = await _httpClient.GetAsync(url);
             if (response.IsSuccessStatusCode)
             {
                 var stockSummary = await response.Content.ReadFromJsonAsync<IEnumerable<ProductStockSummaryDto>>();
@@ -89,10 +119,21 @@ namespace WebUI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetSizesByOption(string model, string color)
         {
+            var userIdObj = HttpContext.Session.GetInt32("UserId");
+            if (!userIdObj.HasValue)
+                return Json(new List<ProductSizeDto>());
+
+            var user = await _userService.GetUserByIdAsync(userIdObj.Value);
+            var shopId = user?.ShopId;
+
             var encodedModel = Uri.EscapeDataString(model ?? "");
             var encodedColor = Uri.EscapeDataString(color ?? "");
             
-            var response = await _httpClient.GetAsync($"/api/product/option/sizes?model={encodedModel}&color={encodedColor}");
+            var url = shopId.HasValue
+                ? $"/api/product/option/sizes?model={encodedModel}&color={encodedColor}&shopId={shopId.Value}"
+                : $"/api/product/option/sizes?model={encodedModel}&color={encodedColor}";
+
+            var response = await _httpClient.GetAsync(url);
             if (response.IsSuccessStatusCode)
             {
                 var sizes = await response.Content.ReadFromJsonAsync<IEnumerable<ProductSizeDto>>();
@@ -234,7 +275,48 @@ namespace WebUI.Controllers
         [HttpGet]
         public async Task<IActionResult> ProductShelfCreateForm(int productId)
         {
-            // Bölgeleri al
+            var userIdObj = HttpContext.Session.GetInt32("UserId");
+            if (!userIdObj.HasValue)
+                return Unauthorized();
+
+            var user = await _userService.GetUserByIdAsync(userIdObj.Value);
+            var shopId = user?.ShopId;
+
+            // Eğer kullanıcının ShopId'si varsa, mağaza bilgilerini al
+            if (shopId.HasValue)
+            {
+                var shopResponse = await _httpClient.GetAsync($"/api/shop/{shopId.Value}");
+                if (shopResponse.IsSuccessStatusCode)
+                {
+                    var shop = await shopResponse.Content.ReadFromJsonAsync<ShopDto>();
+                    if (shop != null)
+                    {
+                        ViewBag.UserShopId = shopId.Value;
+                        ViewBag.PreSelectedShopId = shop.Id;
+                        ViewBag.PreSelectedTownId = shop.TownId;
+                        ViewBag.PreSelectedCityId = shop.CityId;
+                        ViewBag.PreSelectedRegionId = shop.RegionId;
+
+                        // Depo ve raf listelerini yükle
+                        var warehousesResponse = await _httpClient.GetAsync($"/api/warehouse/shop/{shopId.Value}");
+                        var warehouses = warehousesResponse.IsSuccessStatusCode
+                            ? await warehousesResponse.Content.ReadFromJsonAsync<IEnumerable<WareHouseDto>>()
+                            : new List<WareHouseDto>();
+
+                        ViewBag.Warehouses = warehouses;
+                        ViewBag.Shelves = new List<ShelfDto>();
+                        ViewBag.Regions = new List<RegionDto>();
+                        ViewBag.Cities = new List<CityDto>();
+                        ViewBag.Towns = new List<TownDto>();
+                        ViewBag.Shops = new List<ShopDto>();
+
+                        var emptyShelf = new ProductShelfDto { ProductId = productId, Quantity = 1, ShopId = shopId.Value };
+                        return PartialView("_ProductShelfFormModal", emptyShelf);
+                    }
+                }
+            }
+
+            // Admin kullanıcılar için tüm dropdown'ları yükle
             var regionResponse = await _httpClient.GetAsync("/api/region");
             var regions = regionResponse.IsSuccessStatusCode
                 ? await regionResponse.Content.ReadFromJsonAsync<IEnumerable<RegionDto>>()
@@ -246,20 +328,35 @@ namespace WebUI.Controllers
             ViewBag.Shops = new List<ShopDto>();
             ViewBag.Warehouses = new List<WareHouseDto>();
             ViewBag.Shelves = new List<ShelfDto>();
+            ViewBag.UserShopId = null;
 
-            var emptyShelf = new ProductShelfDto { ProductId = productId, Quantity = 1 };
-            return PartialView("_ProductShelfFormModal", emptyShelf);
+            var emptyShelfDto = new ProductShelfDto { ProductId = productId, Quantity = 1 };
+            return PartialView("_ProductShelfFormModal", emptyShelfDto);
         }
 
         [HttpGet]
         public async Task<IActionResult> ProductShelfEditForm(int id)
         {
+            var userIdObj = HttpContext.Session.GetInt32("UserId");
+            if (!userIdObj.HasValue)
+                return Unauthorized();
+
+            var user = await _userService.GetUserByIdAsync(userIdObj.Value);
+            var userShopId = user?.ShopId;
+
             var response = await _httpClient.GetAsync($"/api/product/shelf/{id}");
             if (!response.IsSuccessStatusCode)
                 return NotFound();
 
             var productShelf = await response.Content.ReadFromJsonAsync<ProductShelfDto>();
 
+            // Kullanıcının ShopId'si varsa ve kaydın ShopId'si farklıysa, erişim izni verme
+            if (userShopId.HasValue && productShelf?.ShopId != userShopId.Value)
+                return Unauthorized();
+
+            ViewBag.UserShopId = userShopId;
+
+            // Edit modda mevcut değerlere göre dropdown'ları doldur
             // Bölgeleri al
             var regionResponse = await _httpClient.GetAsync("/api/region");
             if (regionResponse.IsSuccessStatusCode)
@@ -425,7 +522,18 @@ namespace WebUI.Controllers
         [HttpGet]
         public async Task<IActionResult> GetProductShelves(int productId)
         {
-            var response = await _httpClient.GetAsync($"/api/product/{productId}/shelves");
+            var userIdObj = HttpContext.Session.GetInt32("UserId");
+            if (!userIdObj.HasValue)
+                return Json(new List<ProductShelfDetailDto>());
+
+            var user = await _userService.GetUserByIdAsync(userIdObj.Value);
+            var shopId = user?.ShopId;
+
+            var url = shopId.HasValue
+                ? $"/api/product/{productId}/shelves?shopId={shopId.Value}"
+                : $"/api/product/{productId}/shelves";
+
+            var response = await _httpClient.GetAsync(url);
             if (response.IsSuccessStatusCode)
             {
                 var shelves = await response.Content.ReadFromJsonAsync<IEnumerable<ProductShelfDetailDto>>();
@@ -497,6 +605,56 @@ namespace WebUI.Controllers
             
             return Json(new { success = false, message = "Bir hata oluştu." });
         }
+
+        // Quick Transfer endpoints
+        [HttpGet]
+        public async Task<IActionResult> GetShopWithMaxStock(int productId, int? excludeShopId = null)
+        {
+            var url = $"/api/product/{productId}/max-stock-shop";
+            if (excludeShopId.HasValue)
+                url += $"?excludeShopId={excludeShopId.Value}";
+
+            var response = await _httpClient.GetAsync(url);
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                return Json(new { success = false, message = "Bu ürün için başka mağazalarda stok bulunamadı." });
+            }
+
+            var shopStock = await response.Content.ReadFromJsonAsync<Core.Dtos.ShopStockDto>();
+            return Json(new { success = true, data = shopStock });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateQuickTransfer([FromBody] QuickTransferRequest request)
+        {
+            var response = await _httpClient.PostAsJsonAsync("/api/transfer/quick", request);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                return Json(new { success = false, message = "Transfer talebi oluşturulamadı." });
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<QuickTransferResponse>();
+            return Json(new { success = true, data = result });
+        }
+    }
+
+    // Request/Response models
+    public class QuickTransferRequest
+    {
+        public int FromShopId { get; set; }
+        public int ToShopId { get; set; }
+        public int ProductId { get; set; }
+        public int Quantity { get; set; }
+        public int UserId { get; set; }
+    }
+
+    public class QuickTransferResponse
+    {
+        public int TransferId { get; set; }
+        public string Message { get; set; } = string.Empty;
     }
 }
 

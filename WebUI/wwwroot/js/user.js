@@ -65,6 +65,7 @@ function submitUserForm() {
     const email = document.getElementById('userEmail').value.trim();
     const phone = document.getElementById('userPhone').value.trim();
     const password = document.getElementById('userPassword').value;
+    const brandId = document.getElementById('userBrandId').value;
     const shopId = document.getElementById('userShopId').value;
     const roleId = document.getElementById('userRoleId').value;
     const isActive = document.getElementById('userIsActive').checked;
@@ -102,6 +103,7 @@ function submitUserForm() {
     formData.append('Email', email);
     formData.append('Phone', phone);
     formData.append('Password', password);
+    formData.append('BrandId', brandId || '');
     formData.append('ShopId', shopId || '');
     formData.append('RoleId', roleId);
     formData.append('IsActive', isActive);

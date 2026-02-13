@@ -124,12 +124,14 @@ public class UserService : IUserService
         {
             return await _context.Users
                 .Include(u => u.Shop).ThenInclude(s => s!.Brand)
+                .Include(u => u.Brand)
                 .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
                 .OrderByDescending(u => u.CreatedAt)
                 .Select(u => new Core.Dtos.UserDto
                 {
                     Id = u.Id,
                     ShopId = u.ShopId,
+                    BrandId = u.BrandId,
                     Name = u.Name,
                     Email = u.Email ?? "",
                     Phone = u.Phone ?? "",
@@ -142,7 +144,8 @@ public class UserService : IUserService
                     UpdateBy = u.UpdatedBy,
                     RoleId = u.UserRoles.Any() ? u.UserRoles.First().RoleId : (int?)null,
                     ShopName = u.Shop != null ? u.Shop.Name : "",
-                    BrandName = u.Shop != null && u.Shop.Brand != null ? u.Shop.Brand.Name : "",
+                    BrandName = u.BrandId != null && u.Brand != null ? u.Brand.Name 
+                        : (u.Shop != null && u.Shop.Brand != null ? u.Shop.Brand.Name : ""),
                     RoleName = u.UserRoles.Any() 
                         ? string.Join(", ", u.UserRoles.Select(ur => ur.Role.Name))
                         : "Rol Yok"
@@ -164,12 +167,14 @@ public class UserService : IUserService
         {
             return await _context.Users
                 .Include(u => u.Shop).ThenInclude(s => s!.Brand)
+                .Include(u => u.Brand)
                 .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
                 .Where(u => u.Id == userId)
                 .Select(u => new Core.Dtos.UserDto
                 {
                     Id = u.Id,
                     ShopId = u.ShopId,
+                    BrandId = u.BrandId,
                     Name = u.Name,
                     Email = u.Email ?? "",
                     Phone = u.Phone ?? "",
@@ -182,7 +187,8 @@ public class UserService : IUserService
                     UpdateBy = u.UpdatedBy,
                     RoleId = u.UserRoles.Any() ? u.UserRoles.First().RoleId : (int?)null,
                     ShopName = u.Shop != null ? u.Shop.Name : "",
-                    BrandName = u.Shop != null && u.Shop.Brand != null ? u.Shop.Brand.Name : "",
+                    BrandName = u.BrandId != null && u.Brand != null ? u.Brand.Name 
+                        : (u.Shop != null && u.Shop.Brand != null ? u.Shop.Brand.Name : ""),
                     RoleName = u.UserRoles.Any() 
                         ? string.Join(", ", u.UserRoles.Select(ur => ur.Role.Name))
                         : "Rol Yok"

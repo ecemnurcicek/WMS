@@ -4,6 +4,7 @@ public class User
 {
     public int Id { get; set; }
     public int? ShopId { get; set; }
+    public int? BrandId { get; set; }
     public string Name { get; set; } = null!;
     public string? Phone { get; set; }
     public string? Email { get; set; }
@@ -17,5 +18,6 @@ public class User
 
     // Navigation properties
     public virtual Shop? Shop { get; set; }
+    public virtual Brand? Brand { get; set; }
     public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
 }

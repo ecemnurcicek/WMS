@@ -6,6 +6,33 @@ using System.Threading.Tasks;
 
 namespace Core.Dtos
 {
+    /// <summary>
+    /// Ürün arama sonuç DTO'su - mağaza bazlı stok bilgileriyle
+    /// </summary>
+    public class ProductSearchResultDto
+    {
+        public int ProductId { get; set; }
+        public string Barcode { get; set; } = string.Empty;
+        public string Model { get; set; } = string.Empty;
+        public string Color { get; set; } = string.Empty;
+        public string Size { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string? CoverUrl { get; set; }
+        public List<ShopStockInfoDto> ShopStocks { get; set; } = new List<ShopStockInfoDto>();
+    }
+
+    /// <summary>
+    /// Mağaza stok bilgisi
+    /// </summary>
+    public class ShopStockInfoDto
+    {
+        public int ShopId { get; set; }
+        public string ShopName { get; set; } = string.Empty;
+        public string BrandName { get; set; } = string.Empty;
+        public int TotalStock { get; set; }
+    }
+
+
     // Option bazlı DTO (Model + Color) - Listeleme için
     public class ProductOptionDto
     {
@@ -64,6 +91,14 @@ namespace Core.Dtos
 
     // Mağaza bazlı stok özeti
     public class ProductStockSummaryDto
+    {
+        public int ShopId { get; set; }
+        public string ShopName { get; set; } = null!;
+        public int TotalStock { get; set; }
+    }
+
+    // En fazla stok bulunan mağaza bilgisi
+    public class ShopStockDto
     {
         public int ShopId { get; set; }
         public string ShopName { get; set; } = null!;

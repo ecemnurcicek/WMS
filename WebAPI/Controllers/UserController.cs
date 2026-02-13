@@ -57,6 +57,7 @@ namespace WebAPI.Controllers
                 Email = dto.Email,
                 Phone = dto.Phone,
                 ShopId = dto.ShopId,
+                BrandId = dto.BrandId,
                 BirthDate = dto.BirthDate != DateTime.MinValue ? dto.BirthDate : null,
                 Password = PasswordHasherUtil.HashPassword(dto.Password),
                 IsActive = dto.IsActive,
@@ -95,6 +96,7 @@ namespace WebAPI.Controllers
             existingUser.Email = dto.Email;
             existingUser.Phone = dto.Phone;
             existingUser.ShopId = dto.ShopId;
+            existingUser.BrandId = dto.BrandId;
             existingUser.BirthDate = dto.BirthDate != DateTime.MinValue ? dto.BirthDate : null;
             existingUser.IsActive = dto.IsActive;
             existingUser.UpdatedAt = DateTime.Now;

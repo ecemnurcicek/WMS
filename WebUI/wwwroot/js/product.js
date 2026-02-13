@@ -716,3 +716,273 @@ function showToast(message, type = 'info') {
                       type === 'warning' ? 'warning' : 'info';
     showAlert(alertType, message);
 }
+
+// ========================================
+// Quick Transfer (Hızlı Transfer Talebi)
+// ========================================
+
+// Transfer Talep Et - Beden bazlı (Global fonksiyon)
+let currentTransferData = null;
+
+async function handleQuickTransferForSize(productId) {
+    const userId = document.getElementById('currentUserId')?.value;
+    const userShopId = document.getElementById('currentUserShopId')?.value;
+    
+    if (!userId || !userShopId) {
+        alert('Kullanıcı bilgileri bulunamadı.');
+        return;
+    }
+
+    try {
+        // 1. En fazla stok bulunan mağazayı bul
+        const response = await fetch(`/Product/GetShopWithMaxStock?productId=${productId}&excludeShopId=${userShopId}`);
+        const result = await response.json();
+        
+        if (!result.success || !result.data) {
+            alert(result.message || 'Bu ürün için başka mağazalarda stok bulunamadı.');
+            return;
+        }
+
+        const shopStock = result.data;
+        
+        // Transfer bilgilerini sakla
+        currentTransferData = {
+            productId: productId,
+            userId: userId,
+            userShopId: userShopId,
+            shopStock: shopStock
+        };
+
+        // Modal'ı doldur ve göster
+        document.getElementById('transferShopName').textContent = shopStock.shopName;
+        document.getElementById('transferAvailableStock').textContent = shopStock.totalStock;
+        document.getElementById('transferMaxQuantity').textContent = shopStock.totalStock;
+        document.getElementById('transferQuantity').value = 1;
+        document.getElementById('transferQuantity').max = shopStock.totalStock;
+
+        const modal = new bootstrap.Modal(document.getElementById('quickTransferModal'));
+        modal.show();
+
+    } catch (error) {
+        console.error('Error:', error);
+        alert('❌ Bir hata oluştu: ' + error.message);
+    }
+}
+
+// Confirm Transfer butonu - Event Delegation kullanarak
+document.addEventListener('click', async function(e) {
+    if (e.target && e.target.id === 'btnConfirmTransfer') {
+        if (!currentTransferData) return;
+
+        const quantity = parseInt(document.getElementById('transferQuantity').value);
+        
+        if (!quantity || quantity <= 0) {
+            alert('Lütfen geçerli bir miktar girin.');
+            return;
+        }
+
+        if (quantity > currentTransferData.shopStock.totalStock) {
+            alert(`Maksimum ${currentTransferData.shopStock.totalStock} adet talep edebilirsiniz.`);
+            return;
+        }
+
+        // Buton disable
+        const btn = e.target;
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Oluşturuluyor...';
+
+        try {
+            // Transfer talebi oluştur
+            const transferResponse = await fetch('/Product/CreateQuickTransfer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    fromShopId: parseInt(currentTransferData.userShopId),
+                    toShopId: currentTransferData.shopStock.shopId,
+                    productId: parseInt(currentTransferData.productId),
+                    quantity: quantity,
+                    userId: parseInt(currentTransferData.userId)
+                })
+            });
+
+            const transferResult = await transferResponse.json();
+
+            // Modal'ı kapat
+            const modal = bootstrap.Modal.getInstance(document.getElementById('quickTransferModal'));
+            if (modal) modal.hide();
+
+            if (transferResult.success && transferResult.data) {
+                // Başarılı modal göster
+                showSuccessModal(
+                    transferResult.data.transferId,
+                    currentTransferData.shopStock.shopName,
+                    quantity
+                );
+            } else {
+                showAlert('danger', '❌ ' + (transferResult.message || 'Transfer talebi oluşturulamadı.'));
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+            showAlert('danger', '❌ Bir hata oluştu: ' + error.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+            currentTransferData = null;
+        }
+    }
+});
+
+// Başarılı Transfer Modal Göster
+function showSuccessModal(transferId, shopName, quantity) {
+    const modalHtml = `
+        <div class="modal fade" id="transferSuccessModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg">
+                    <div class="modal-body text-center p-5">
+                        <div class="mb-4">
+                            <i class="fas fa-check-circle text-success" style="font-size: 80px;"></i>
+                        </div>
+                        <h3 class="text-success mb-3">Transfer Talebi Oluşturuldu!</h3>
+                        <div class="alert alert-light border mb-4">
+                            <div class="row text-start">
+                                <div class="col-5 fw-bold">Transfer No:</div>
+                                <div class="col-7">#${transferId}</div>
+                            </div>
+                            <hr class="my-2">
+                            <div class="row text-start">
+                                <div class="col-5 fw-bold">Gönderici Mağaza:</div>
+                                <div class="col-7">${shopName}</div>
+                            </div>
+                            <hr class="my-2">
+                            <div class="row text-start">
+                                <div class="col-5 fw-bold">Miktar:</div>
+                                <div class="col-7">${quantity} adet</div>
+                            </div>
+                        </div>
+                        <p class="text-muted mb-4">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Transfer talebi başarıyla oluşturuldu. Mağaza onayını bekleyebilirsiniz.
+                        </p>
+                        <button type="button" class="btn btn-success btn-lg px-5" data-bs-dismiss="modal">
+                            <i class="fas fa-check me-2"></i>Tamam
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Eski modalı temizle
+    const oldModal = document.getElementById('transferSuccessModal');
+    if (oldModal) oldModal.remove();
+    
+    // Yeni modalı ekle
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    // Modal'ı göster
+    const modal = new bootstrap.Modal(document.getElementById('transferSuccessModal'));
+    modal.show();
+    
+    // Modal kapandığında temizle
+    document.getElementById('transferSuccessModal').addEventListener('hidden.bs.modal', function() {
+        this.remove();
+    });
+}
+
+// Quick Transfer butonu için event listener (ESKİ - artık gerek yok)
+document.addEventListener('DOMContentLoaded', function() {
+    // Detail modal açıldığında btnQuickTransfer'ı dinle
+    const observer = new MutationObserver(function(mutations) {
+        const btnQuickTransfer = document.getElementById('btnQuickTransfer');
+        const btnQuickTransferFooter = document.getElementById('btnQuickTransferFooter');
+        
+        if (btnQuickTransfer && !btnQuickTransfer.dataset.listenerAdded) {
+            btnQuickTransfer.dataset.listenerAdded = 'true';
+            btnQuickTransfer.addEventListener('click', handleQuickTransfer);
+        }
+        
+        if (btnQuickTransferFooter && !btnQuickTransferFooter.dataset.listenerAdded) {
+            btnQuickTransferFooter.dataset.listenerAdded = 'true';
+            btnQuickTransferFooter.addEventListener('click', handleQuickTransfer);
+        }
+    });
+    
+    observer.observe(document.body, { childList: true, subtree: true });
+});
+
+async function handleQuickTransfer() {
+    const productId = document.getElementById('detailProductId')?.value;
+    const userId = document.getElementById('currentUserId')?.value;
+    const userShopId = document.getElementById('currentUserShopId')?.value;
+    
+    if (!productId || !userId || !userShopId) {
+        showAlert('danger', 'Kullanıcı bilgileri bulunamadı.');
+        return;
+    }
+
+    // Buton disable
+    const btn = document.getElementById('btnQuickTransfer');
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>İşleniyor...';
+
+    try {
+        // 1. En fazla stok bulunan mağazayı bul
+        const response = await fetch(`https://localhost:7234/api/product/${productId}/max-stock-shop?excludeShopId=${userShopId}`);
+        
+        if (!response.ok) {
+            const error = await response.json();
+            showAlert('warning', error.message || 'Bu ürün için başka mağazalarda stok bulunamadı.');
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+            return;
+        }
+
+        const shopStock = await response.json();
+        
+        // 2. Miktar sor
+        const quantity = prompt(`${shopStock.shopName} mağazasında ${shopStock.totalStock} adet stok var.\n\nKaç adet talep etmek istiyorsunuz?`, '1');
+        
+        if (!quantity || parseInt(quantity) <= 0) {
+            showAlert('info', 'Transfer talebi iptal edildi.');
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+            return;
+        }
+
+        // 3. Transfer talebi oluştur
+        const transferResponse = await fetch('https://localhost:7234/api/transfer/quick', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                fromShopId: parseInt(userShopId),      // Talep eden (ben)
+                toShopId: shopStock.shopId,            // Gönderen (en fazla stok olan)
+                productId: parseInt(productId),
+                quantity: parseInt(quantity),
+                userId: parseInt(userId)
+            })
+        });
+
+        const result = await transferResponse.json();
+
+        if (transferResponse.ok) {
+            showAlert('success', `Transfer talebi oluşturuldu! (Transfer #${result.transferId})`);
+        } else {
+            showAlert('danger', result.message || 'Transfer talebi oluşturulamadı.');
+        }
+
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('danger', 'Bir hata oluştu: ' + error.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+    }
+}
+

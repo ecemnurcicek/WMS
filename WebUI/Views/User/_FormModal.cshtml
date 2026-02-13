@@ -1,6 +1,7 @@
 @model Core.Dtos.UserDto
 @{
     var shops = ViewBag.Shops as IEnumerable<Core.Dtos.ShopDto> ?? new List<Core.Dtos.ShopDto>();
+    var brands = ViewBag.Brands as IEnumerable<Core.Dtos.BrandDto> ?? new List<Core.Dtos.BrandDto>();
     var roles = ViewBag.Roles as IEnumerable<WebUI.Controllers.UserController.RoleItem> ?? new List<WebUI.Controllers.UserController.RoleItem>();
     bool isEdit = Model?.Id > 0;
 }
@@ -58,6 +59,26 @@
                             }
                         </label>
                         <input type="password" id="userPassword" name="Password" class="form-control" placeholder="••••••••" @(isEdit ? "" : "required")>
+                    </div>
+
+                    <!-- Marka Seçimi (Marka Sorumlusu için) -->
+                    <div class="form-group mb-3" id="brandSelectGroup">
+                        <label for="userBrandId">Marka</label>
+                        <select id="userBrandId" name="BrandId" class="form-control">
+                            <option value="">-- Marka Seçiniz --</option>
+                            @foreach (var brand in brands)
+                            {
+                                if (Model?.BrandId == brand.Id)
+                                {
+                                    <option value="@brand.Id" selected>@brand.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@brand.Id">@brand.Name</option>
+                                }
+                            }
+                        </select>
+                        <small class="text-muted">Marka Sorumlusu rolü için marka seçiniz.</small>
                     </div>
 
                     <!-- Mağaza Seçimi -->

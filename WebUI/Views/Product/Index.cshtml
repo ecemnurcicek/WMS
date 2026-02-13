@@ -3,10 +3,16 @@
 @{
     ViewData["Title"] = "Ürün Yönetimi";
     Layout = "_Layout";
+    var userId = ViewData["UserId"];
+    var userShopId = ViewData["UserShopId"];
 }
 
 <link rel="stylesheet" href="~/css/product.css" asp-append-version="true" />
 <script src="~/js/product.js" asp-append-version="true"></script>
+
+<!-- Hidden inputs for user info -->
+<input type="hidden" id="currentUserId" value="@userId" />
+<input type="hidden" id="currentUserShopId" value="@userShopId" />
 
 <div class="page-container product-container">
     <!-- Header -->

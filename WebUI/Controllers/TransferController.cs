@@ -32,15 +32,30 @@ namespace WebUI.Controllers
             ViewData["UserEmail"] = user?.Email ?? "email@example.com";
             ViewData["UserRoles"] = userRoles;
             ViewData["UserShopId"] = user?.ShopId;
+            ViewData["UserBrandId"] = user?.BrandId;
             ViewData["UserId"] = userIdObj.Value;
 
             // Kullanıcı rollerine göre transfer listesi
             List<TransferDto> transfers;
             
-            // Admin, bölge sorumlusu, marka sorumlusu tüm transferleri görebilir
-            if (IsAdminOrManager(userRoles))
+            var isBrandManager = IsBrandManager(userRoles);
+            
+            // Admin, bölge sorumlusu tüm transferleri görebilir
+            // Marka Sorumlusu sadece kendi markasına ait transferleri görebilir
+            if (IsAdminOrRegionManager(userRoles))
             {
                 var response = await _httpClient.GetAsync("/api/transfer");
+                transfers = response.IsSuccessStatusCode 
+                    ? await response.Content.ReadFromJsonAsync<List<TransferDto>>() ?? new List<TransferDto>()
+                    : new List<TransferDto>();
+
+                ViewBag.OutgoingTransfers = new List<TransferDto>();
+                ViewBag.IncomingTransfers = new List<TransferDto>();
+            }
+            else if (isBrandManager && user?.BrandId.HasValue == true)
+            {
+                // Marka Sorumlusu: Sadece kendi markasına ait transferleri görebilir
+                var response = await _httpClient.GetAsync($"/api/transfer/brand/{user.BrandId}");
                 transfers = response.IsSuccessStatusCode 
                     ? await response.Content.ReadFromJsonAsync<List<TransferDto>>() ?? new List<TransferDto>()
                     : new List<TransferDto>();
@@ -106,9 +121,12 @@ namespace WebUI.Controllers
             ViewBag.Brands = brands;
 
             // Admin/Manager: Tüm mağazalar gösterilir
+            // Marka Sorumlusu: Sadece kendi markasının mağazaları
             // Normal kullanıcı: FromShopId otomatik atanır, sadece ToShop seçer
             ViewBag.IsAdminOrManager = IsAdminOrManager(userRoles);
+            ViewBag.IsBrandManager = IsBrandManager(userRoles);
             ViewBag.UserShopId = user?.ShopId;
+            ViewBag.UserBrandId = user?.BrandId;
             ViewBag.UserId = userIdObj.Value;
 
             // Kullanıcının mağazası varsa, o mağazayı al
@@ -219,6 +237,23 @@ namespace WebUI.Controllers
                 r.Equals("Bölge Sorumlusu", StringComparison.OrdinalIgnoreCase) ||
                 r.Equals("Marka Sorumlusu", StringComparison.OrdinalIgnoreCase) ||
                 r.Equals("RegionManager", StringComparison.OrdinalIgnoreCase) ||
+                r.Equals("BrandManager", StringComparison.OrdinalIgnoreCase));
+        }
+
+        private bool IsAdminOrRegionManager(string userRoles)
+        {
+            var roles = userRoles.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            return roles.Any(r => 
+                r.Equals("Admin", StringComparison.OrdinalIgnoreCase) ||
+                r.Equals("Bölge Sorumlusu", StringComparison.OrdinalIgnoreCase) ||
+                r.Equals("RegionManager", StringComparison.OrdinalIgnoreCase));
+        }
+
+        private bool IsBrandManager(string userRoles)
+        {
+            var roles = userRoles.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            return roles.Any(r => 
+                r.Equals("Marka Sorumlusu", StringComparison.OrdinalIgnoreCase) ||
                 r.Equals("BrandManager", StringComparison.OrdinalIgnoreCase));
         }
     }

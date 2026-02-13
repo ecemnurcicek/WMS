@@ -296,9 +296,18 @@ namespace Business.Services
 
         public async Task<bool> UpdateStatusAsync(int transferId, int status, int updatedBy)
         {
-            var transfer = await _context.Transfers.FindAsync(transferId);
+            var transfer = await _context.Transfers
+                .Include(t => t.Details)
+                .FirstOrDefaultAsync(t => t.Id == transferId);
+            
             if (transfer == null)
                 throw new Exception("Transfer bulunamadı");
+
+            // Eğer status=1 (Gönderildi) ise stok kontrolü ve işlemleri yap
+            if (status == 1)
+            {
+                await ProcessTransferSendingAsync(transfer, updatedBy);
+            }
 
             transfer.Status = status;
             transfer.UpdatedAt = DateTime.Now;
@@ -308,6 +317,107 @@ namespace Business.Services
             await _context.SaveChangesAsync();
 
             return true;
+        }
+
+        /// <summary>
+        /// Transfer gönderilirken stok kontrolü ve işlemleri yapar
+        /// </summary>
+        private async Task ProcessTransferSendingAsync(Transfer transfer, int userId)
+        {
+            var warnings = new List<string>();
+
+            foreach (var detail in transfer.Details)
+            {
+                // Gönderici mağazanın (ToShop) raflarındaki bu ürün için stok kontrolü
+                var productShelves = await _context.ProductShelves
+                    .Include(ps => ps.Shelf)
+                        .ThenInclude(s => s!.Warehouse)
+                    .Where(ps => ps.ProductId == detail.ProductId && 
+                                 ps.Shelf != null && 
+                                 ps.Shelf.Warehouse != null &&
+                                 ps.Shelf.Warehouse.ShopId == transfer.ToShopId)
+                    .ToListAsync();
+
+                var totalAvailableStock = productShelves.Sum(ps => ps.Quantity);
+                // Kullanıcının belirlediği adet (QuantitySent) öncelikli, yoksa istenen adet (QuantityRequired)
+                var requestedQuantity = detail.QuantitySent == 0 ? detail.QuantityRequired : detail.QuantitySent;
+                var quantityToSend = 0;
+
+                if (totalAvailableStock == 0)
+                {
+                    // Hiç stok yok
+                    quantityToSend = 0;
+                    warnings.Add($"Ürün {detail.ProductId} için stok bulunmamaktadır.");
+                }
+                else if (totalAvailableStock < requestedQuantity)
+                {
+                    // Yeterli stok yok, sadece mevcut stok kadar gönderilecek
+                    quantityToSend = totalAvailableStock;
+                    warnings.Add($"Ürün {detail.ProductId} için yeterli stok yok. İstenilen: {requestedQuantity}, Gönderilen: {quantityToSend}");
+                }
+                else
+                {
+                    // Yeterli stok var
+                    quantityToSend = requestedQuantity ?? 0;
+                }
+
+                // QuantitySent güncelle
+                detail.QuantitySent = quantityToSend;
+                detail.UpdateAt = DateTime.Now;
+                detail.UpdateBy = userId;
+
+                // Stoğu raflardan düş ve ProductTransactions kayıtları oluştur
+                var remainingQuantity = quantityToSend;
+                
+                foreach (var productShelf in productShelves.OrderBy(ps => ps.Id))
+                {
+                    if (remainingQuantity <= 0) break;
+
+                    var quantityFromThisShelf = Math.Min(productShelf.Quantity, remainingQuantity);
+
+                    if (quantityFromThisShelf > 0)
+                    {
+                        // ProductTransaction kaydı ekle
+                        var transaction = new ProductTransaction
+                        {
+                            ProductId = detail.ProductId,
+                            FromShelfId = productShelf.ShelfId,
+                            ToShelfId = null, // Henüz alıcı mağazada rafa atanmadı
+                            TransactionType = "TRANSFER_OUT",
+                            TransferId = transfer.Id,
+                            Quantity = quantityFromThisShelf,
+                            CreatedAt = DateTime.Now,
+                            CreatedBy = userId
+                        };
+                        _context.ProductTransactions.Add(transaction);
+
+                        // ProductShelves'teki miktarı azalt
+                        productShelf.Quantity -= quantityFromThisShelf;
+                        if (productShelf.Quantity == 0)
+                        {
+                            // Stok bittiyse kaydı sil
+                            _context.ProductShelves.Remove(productShelf);
+                        }
+                        else
+                        {
+                            _context.ProductShelves.Update(productShelf);
+                        }
+
+                        remainingQuantity -= quantityFromThisShelf;
+                    }
+                }
+            }
+
+            // Uyarılar varsa loglayabiliriz veya başka bir yerde kullanabiliriz
+            if (warnings.Any())
+            {
+                // Log sistemine warnings yazılabilir
+                foreach (var warning in warnings)
+                {
+                    // TODO: Warning sistemine ekle
+                    Console.WriteLine($"UYARI: {warning}");
+                }
+            }
         }
 
         public async Task<bool> UpdateDetailAsync(TransferDetailDto detail)
@@ -400,6 +510,42 @@ namespace Business.Services
             await _context.SaveChangesAsync();
 
             return true;
+        }
+
+        public async Task<int> CreateQuickTransferAsync(int fromShopId, int toShopId, int productId, int quantity, int userId)
+        {
+            if (fromShopId == toShopId)
+                throw new Exception("Talep eden ve gönderen mağaza aynı olamaz");
+
+            if (quantity <= 0)
+                throw new Exception("Miktar 0'dan büyük olmalıdır");
+
+            // Transfer oluştur
+            var transfer = new Transfer
+            {
+                FromShopId = fromShopId,
+                ToShopId = toShopId,
+                Name = Guid.NewGuid().ToString().ToUpper(),
+                CreatedAt = DateTime.Now,
+                CreatedBy = userId,
+                Status = 0 // Bekliyor
+            };
+
+            var transferDetail = new TransferDetail
+            {
+                ProductId = productId,
+                QuantityRequired = quantity,
+                QuantitySent = 0,
+                CreatedAt = DateTime.Now,
+                CreatedBy = userId
+            };
+
+            transfer.Details.Add(transferDetail);
+
+            _context.Transfers.Add(transfer);
+            await _context.SaveChangesAsync();
+
+            return transfer.Id;
         }
     }
 }

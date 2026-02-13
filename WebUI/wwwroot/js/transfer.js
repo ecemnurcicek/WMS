@@ -12,6 +12,7 @@ function initializeTransferManagement() {
     setupEventListeners();
     setupFilters();
     setupTabFilters();
+    setupCopyIcons();
 }
 
 // Setup event listeners
@@ -23,6 +24,18 @@ function setupEventListeners() {
             openCreateModal();
         });
     }
+}
+
+// Setup copy icons - event delegation for dynamically loaded content
+function setupCopyIcons() {
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('copy-icon')) {
+            const textToCopy = e.target.getAttribute('data-copy-text');
+            if (textToCopy) {
+                copyTransferCode(textToCopy, e.target);
+            }
+        }
+    });
 }
 
 // Setup filters (Admin view)
@@ -788,4 +801,119 @@ function showAlert(message, type) {
     setTimeout(() => {
         alertDiv.remove();
     }, 3000);
+}
+
+// Copy to clipboard function
+function copyToClipboard(text, button) {
+    // Modern Clipboard API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+            // Show success feedback
+            showCopyFeedback(button, true);
+        }).catch(function(err) {
+            console.error('Clipboard API failed:', err);
+            // Fallback to execCommand
+            fallbackCopyToClipboard(text, button);
+        });
+    } else {
+        // Fallback for older browsers
+        fallbackCopyToClipboard(text, button);
+    }
+}
+
+// Fallback copy method using execCommand (for older browsers)
+function fallbackCopyToClipboard(text, button) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-9999px';
+    document.body.appendChild(textArea);
+    textArea.select();
+    
+    try {
+        const successful = document.execCommand('copy');
+        showCopyFeedback(button, successful);
+    } catch (err) {
+        console.error('Fallback copy failed:', err);
+        showCopyFeedback(button, false);
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+// Show visual feedback for copy action
+function showCopyFeedback(button, success) {
+    const icon = button.querySelector('i');
+    const originalClass = icon.className;
+    
+    if (success) {
+        // Change icon to check mark
+        icon.className = 'fas fa-check text-success';
+        button.classList.add('copy-success');
+        
+        // Show toast notification
+        showToast('Transfer kodu kopyalandı!', 'success');
+        
+        // Reset after 2 seconds
+        setTimeout(() => {
+            icon.className = originalClass;
+            button.classList.remove('copy-success');
+        }, 2000);
+    } else {
+        // Show error feedback
+        icon.className = 'fas fa-times text-danger';
+        showToast('Kopyalama başarısız!', 'error');
+        
+        // Reset after 2 seconds
+        setTimeout(() => {
+            icon.className = originalClass;
+        }, 2000);
+    }
+}
+
+// Copy transfer code to clipboard
+function copyTransferCode(text, iconElement) {
+    // Modern Clipboard API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+            showCopySuccess(iconElement);
+        }).catch(function(err) {
+            console.error('Clipboard API failed:', err);
+            fallbackCopy(text, iconElement);
+        });
+    } else {
+        fallbackCopy(text, iconElement);
+    }
+}
+
+// Fallback copy method for older browsers
+function fallbackCopy(text, iconElement) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-9999px';
+    document.body.appendChild(textArea);
+    textArea.select();
+    
+    try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+            showCopySuccess(iconElement);
+        } else {
+            // Show error toast only, keep copy icon
+            showToast('Kopyalama başarısız!', 'error');
+        }
+    } catch (err) {
+        console.error('Fallback copy failed:', err);
+        // Show error toast only, keep copy icon
+        showToast('Kopyalama başarısız!', 'error');
+    }
+    
+    document.body.removeChild(textArea);
+}
+
+// Show success feedback
+function showCopySuccess(iconElement) {
+    // Just show toast, keep the copy icon unchanged
+    showToast('Transfer kodu kopyalandı!', 'success');
 }

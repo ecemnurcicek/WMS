@@ -33,6 +33,7 @@ public class LoginService : ILoginService
         var user = await _context.Users
             .Include(u => u.UserRoles)
             .ThenInclude(ur => ur.Role)
+            .Include(u => u.Brand)
             .FirstOrDefaultAsync(u => u.Email == loginDto.Email && u.IsActive);
 
         if (user == null)
@@ -61,6 +62,8 @@ public class LoginService : ILoginService
             Success = true,
             Message = "Başarıyla giriş yapıldı.",
             UserId = user.Id,
+            ShopId = user.ShopId,
+            BrandId = user.BrandId,
             UserName = user.Name,
             UserEmail = user.Email,
             Roles = user.UserRoles.Select(ur => ur.Role.Name).ToList(),

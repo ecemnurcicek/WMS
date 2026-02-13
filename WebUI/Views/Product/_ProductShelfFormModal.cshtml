@@ -6,6 +6,12 @@
     var shops = ViewBag.Shops as IEnumerable<Core.Dtos.ShopDto> ?? new List<Core.Dtos.ShopDto>();
     var warehouses = ViewBag.Warehouses as IEnumerable<Core.Dtos.WareHouseDto> ?? new List<Core.Dtos.WareHouseDto>();
     var shelves = ViewBag.Shelves as IEnumerable<Core.Dtos.ShelfDto> ?? new List<Core.Dtos.ShelfDto>();
+    var userShopId = ViewBag.UserShopId as int?;
+    var preSelectedRegionId = ViewBag.PreSelectedRegionId as int?;
+    var preSelectedCityId = ViewBag.PreSelectedCityId as int?;
+    var preSelectedTownId = ViewBag.PreSelectedTownId as int?;
+    var preSelectedShopId = ViewBag.PreSelectedShopId as int?;
+    var isUserShopSpecific = userShopId.HasValue;
 }
 
 <!-- ProductShelf Form Modal - Beden Bazlı Raf Ataması -->
@@ -63,135 +69,191 @@
                         <input type="hidden" name="Id" value="0" />
                         <input type="hidden" name="ProductId" value="@(Model?.ProductId ?? 0)" />
                         
-                        <div class="row">
-                            <!-- Bölge Seçimi -->
-                            <div class="col-md-4">
-                                <div class="form-group mb-3">
-                                    <label for="psRegion">Bölge <span class="text-danger">*</span></label>
-                                    <select id="psRegion" name="RegionId" class="form-control form-select" required>
-                                        <option value="">-- Bölge Seçiniz --</option>
-                                        @foreach (var region in regions)
-                                        {
-                                            if (Model?.RegionId == region.Id)
+                        @if (isUserShopSpecific)
+                        {
+                            <!-- Kullanıcının mağazası belirli ise hidden alanlar -->
+                            <input type="hidden" name="RegionId" value="@(preSelectedRegionId ?? Model?.RegionId ?? 0)" />
+                            <input type="hidden" name="CityId" value="@(preSelectedCityId ?? Model?.CityId ?? 0)" />
+                            <input type="hidden" name="TownId" value="@(preSelectedTownId ?? Model?.TownId ?? 0)" />
+                            <input type="hidden" name="ShopId" value="@(preSelectedShopId ?? Model?.ShopId ?? 0)" />
+                            
+                            <div class="row">
+                                <!-- Depo Seçimi -->
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="psWarehouse">Depo <span class="text-danger">*</span></label>
+                                        <select id="psWarehouse" name="WarehouseId" class="form-control form-select" required>
+                                            <option value="">-- Depo Seçiniz --</option>
+                                            @foreach (var warehouse in warehouses)
                                             {
-                                                <option value="@region.Id" selected>@region.Name</option>
+                                                if (Model?.WarehouseId == warehouse.Id)
+                                                {
+                                                    <option value="@warehouse.Id" selected>@warehouse.Name</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@warehouse.Id">@warehouse.Name</option>
+                                                }
                                             }
-                                            else
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Raf Seçimi -->
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="psShelf">Raf <span class="text-danger">*</span></label>
+                                        <select id="psShelf" name="ShelfId" class="form-control form-select" required>
+                                            <option value="">-- Önce Depo Seçiniz --</option>
+                                            @foreach (var shelf in shelves)
                                             {
-                                                <option value="@region.Id">@region.Name</option>
+                                                if (Model?.ShelfId == shelf.Id)
+                                                {
+                                                    <option value="@shelf.Id" selected>@shelf.Code</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@shelf.Id">@shelf.Code</option>
+                                                }
                                             }
-                                        }
-                                    </select>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <!-- Admin kullanıcılar için tüm dropdown'lar -->
+                            <div class="row">
+                                <!-- Bölge Seçimi -->
+                                <div class="col-md-4">
+                                    <div class="form-group mb-3">
+                                        <label for="psRegion">Bölge <span class="text-danger">*</span></label>
+                                        <select id="psRegion" name="RegionId" class="form-control form-select" required>
+                                            <option value="">-- Bölge Seçiniz --</option>
+                                            @foreach (var region in regions)
+                                            {
+                                                if (Model?.RegionId == region.Id)
+                                                {
+                                                    <option value="@region.Id" selected>@region.Name</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@region.Id">@region.Name</option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Şehir Seçimi -->
+                                <div class="col-md-4">
+                                    <div class="form-group mb-3">
+                                        <label for="psCity">Şehir <span class="text-danger">*</span></label>
+                                        <select id="psCity" name="CityId" class="form-control form-select" required>
+                                            <option value="">-- Önce Bölge Seçiniz --</option>
+                                            @foreach (var city in cities)
+                                            {
+                                                if (Model?.CityId == city.Id)
+                                                {
+                                                    <option value="@city.Id" selected>@city.Name</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@city.Id">@city.Name</option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- İlçe Seçimi -->
+                                <div class="col-md-4">
+                                    <div class="form-group mb-3">
+                                        <label for="psTown">İlçe <span class="text-danger">*</span></label>
+                                        <select id="psTown" name="TownId" class="form-control form-select" required>
+                                            <option value="">-- Önce Şehir Seçiniz --</option>
+                                            @foreach (var town in towns)
+                                            {
+                                                if (Model?.TownId == town.Id)
+                                                {
+                                                    <option value="@town.Id" selected>@town.Name</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@town.Id">@town.Name</option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Şehir Seçimi -->
-                            <div class="col-md-4">
-                                <div class="form-group mb-3">
-                                    <label for="psCity">Şehir <span class="text-danger">*</span></label>
-                                    <select id="psCity" name="CityId" class="form-control form-select" required>
-                                        <option value="">-- Önce Bölge Seçiniz --</option>
-                                        @foreach (var city in cities)
-                                        {
-                                            if (Model?.CityId == city.Id)
+                            <div class="row">
+                                <!-- Mağaza Seçimi -->
+                                <div class="col-md-4">
+                                    <div class="form-group mb-3">
+                                        <label for="psShop">Mağaza <span class="text-danger">*</span></label>
+                                        <select id="psShop" name="ShopId" class="form-control form-select" required>
+                                            <option value="">-- Önce İlçe Seçiniz --</option>
+                                            @foreach (var shop in shops)
                                             {
-                                                <option value="@city.Id" selected>@city.Name</option>
+                                                if (Model?.ShopId == shop.Id)
+                                                {
+                                                    <option value="@shop.Id" selected>@shop.Name</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@shop.Id">@shop.Name</option>
+                                                }
                                             }
-                                            else
-                                            {
-                                                <option value="@city.Id">@city.Name</option>
-                                            }
-                                        }
-                                    </select>
+                                        </select>
+                                    </div>
                                 </div>
-                            </div>
 
-                            <!-- İlçe Seçimi -->
-                            <div class="col-md-4">
-                                <div class="form-group mb-3">
-                                    <label for="psTown">İlçe <span class="text-danger">*</span></label>
-                                    <select id="psTown" name="TownId" class="form-control form-select" required>
-                                        <option value="">-- Önce Şehir Seçiniz --</option>
-                                        @foreach (var town in towns)
-                                        {
-                                            if (Model?.TownId == town.Id)
+                                <!-- Depo Seçimi -->
+                                <div class="col-md-4">
+                                    <div class="form-group mb-3">
+                                        <label for="psWarehouse">Depo <span class="text-danger">*</span></label>
+                                        <select id="psWarehouse" name="WarehouseId" class="form-control form-select" required>
+                                            <option value="">-- Önce Mağaza Seçiniz --</option>
+                                            @foreach (var warehouse in warehouses)
                                             {
-                                                <option value="@town.Id" selected>@town.Name</option>
+                                                if (Model?.WarehouseId == warehouse.Id)
+                                                {
+                                                    <option value="@warehouse.Id" selected>@warehouse.Name</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@warehouse.Id">@warehouse.Name</option>
+                                                }
                                             }
-                                            else
-                                            {
-                                                <option value="@town.Id">@town.Name</option>
-                                            }
-                                        }
-                                    </select>
+                                        </select>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <div class="row">
-                            <!-- Mağaza Seçimi -->
-                            <div class="col-md-4">
-                                <div class="form-group mb-3">
-                                    <label for="psShop">Mağaza <span class="text-danger">*</span></label>
-                                    <select id="psShop" name="ShopId" class="form-control form-select" required>
-                                        <option value="">-- Önce İlçe Seçiniz --</option>
-                                        @foreach (var shop in shops)
-                                        {
-                                            if (Model?.ShopId == shop.Id)
+                                <!-- Raf Seçimi -->
+                                <div class="col-md-4">
+                                    <div class="form-group mb-3">
+                                        <label for="psShelf">Raf <span class="text-danger">*</span></label>
+                                        <select id="psShelf" name="ShelfId" class="form-control form-select" required>
+                                            <option value="">-- Önce Depo Seçiniz --</option>
+                                            @foreach (var shelf in shelves)
                                             {
-                                                <option value="@shop.Id" selected>@shop.Name</option>
+                                                if (Model?.ShelfId == shelf.Id)
+                                                {
+                                                    <option value="@shelf.Id" selected>@shelf.Code</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value="@shelf.Id">@shelf.Code</option>
+                                                }
                                             }
-                                            else
-                                            {
-                                                <option value="@shop.Id">@shop.Name</option>
-                                            }
-                                        }
-                                    </select>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
-
-                            <!-- Depo Seçimi -->
-                            <div class="col-md-4">
-                                <div class="form-group mb-3">
-                                    <label for="psWarehouse">Depo <span class="text-danger">*</span></label>
-                                    <select id="psWarehouse" name="WarehouseId" class="form-control form-select" required>
-                                        <option value="">-- Önce Mağaza Seçiniz --</option>
-                                        @foreach (var warehouse in warehouses)
-                                        {
-                                            if (Model?.WarehouseId == warehouse.Id)
-                                            {
-                                                <option value="@warehouse.Id" selected>@warehouse.Name</option>
-                                            }
-                                            else
-                                            {
-                                                <option value="@warehouse.Id">@warehouse.Name</option>
-                                            }
-                                        }
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- Raf Seçimi -->
-                            <div class="col-md-4">
-                                <div class="form-group mb-3">
-                                    <label for="psShelf">Raf <span class="text-danger">*</span></label>
-                                    <select id="psShelf" name="ShelfId" class="form-control form-select" required>
-                                        <option value="">-- Önce Depo Seçiniz --</option>
-                                        @foreach (var shelf in shelves)
-                                        {
-                                            if (Model?.ShelfId == shelf.Id)
-                                            {
-                                                <option value="@shelf.Id" selected>@shelf.Code</option>
-                                            }
-                                            else
-                                            {
-                                                <option value="@shelf.Id">@shelf.Code</option>
-                                            }
-                                        }
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
+                        }
 
                         <!-- Adet -->
                         <div class="row">
