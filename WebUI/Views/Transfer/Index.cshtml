@@ -199,6 +199,7 @@
                                 <option value="0" selected>Bekliyor</option>
                                 <option value="1">Gönderildi</option>
                                 <option value="2">Tamamlandı</option>
+                                <option value="3">İptal Edildi</option>
                             </select>
                         </div>
                         <div class="filter-group">
@@ -254,6 +255,9 @@
                                                         break;
                                                     case 2:
                                                         <span class="badge status-completed">Tamamlandı</span>
+                                                        break;
+                                                    case 3:
+                                                        <span class="badge status-cancelled">İptal Edildi</span>
                                                         break;
                                                 }
                                             </td>

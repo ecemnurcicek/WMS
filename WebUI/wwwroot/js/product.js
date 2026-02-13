@@ -1,5 +1,8 @@
 // Product Management JavaScript - Option Bazlı Sistem
 
+// Ana sayfa tablosundaki verilerin güncellenmesi gerektiğini takip eder
+let optionDetailDirty = false;
+
 document.addEventListener('DOMContentLoaded', function () {
     // Add Product (Option) Button
     const btnAddProduct = document.getElementById('btnAddProduct');
@@ -8,6 +11,14 @@ document.addEventListener('DOMContentLoaded', function () {
             loadCreateForm();
         });
     }
+
+    // Option Detail Modal kapandığında değişiklik varsa sayfayı yenile
+    document.addEventListener('hidden.bs.modal', function (e) {
+        if (e.target && e.target.id === 'optionDetailModal' && optionDetailDirty) {
+            optionDetailDirty = false;
+            location.reload();
+        }
+    });
 });
 
 // ========================================
@@ -31,6 +42,8 @@ function openOptionDetail(model, color) {
 
 // Option Detay Yenile
 function refreshOptionDetail(model, color) {
+    // Değişiklik yapıldığını işaretle
+    optionDetailDirty = true;
     // Önce mevcut modalı kapat
     const existingModal = document.getElementById('optionDetailModal');
     if (existingModal) {
@@ -422,8 +435,8 @@ function addProductShelfFromDetail() {
         .then(data => {
             if (data.success) {
                 showAlert('success', data.message);
+                optionDetailDirty = true;
                 loadProductShelves(productId);
-                // Reset form
                 document.getElementById('detailRegion').value = '';
                 document.getElementById('detailCity').innerHTML = '<option value="">-- Önce Bölge --</option>';
                 document.getElementById('detailCity').disabled = true;
@@ -651,6 +664,7 @@ function submitProductShelfForm() {
                 const modal = bootstrap.Modal.getInstance(document.getElementById('productShelfFormModal'));
                 modal.hide();
                 showAlert('success', data.message);
+                optionDetailDirty = true;
                 loadProductShelves(productId);
             } else {
                 showAlert('danger', data.message);
@@ -676,6 +690,7 @@ function confirmDeleteProductShelf() {
                 const modal = bootstrap.Modal.getInstance(document.getElementById('productShelfDeleteModal'));
                 modal.hide();
                 showAlert('success', data.message);
+                optionDetailDirty = true;
                 loadProductShelves(productId);
             } else {
                 showAlert('danger', data.message);
@@ -887,9 +902,10 @@ function showSuccessModal(transferId, shopName, quantity) {
     const modal = new bootstrap.Modal(document.getElementById('transferSuccessModal'));
     modal.show();
     
-    // Modal kapandığında temizle
+    // Modal kapandığında sayfayı yenile (stok değişmiş olabilir)
     document.getElementById('transferSuccessModal').addEventListener('hidden.bs.modal', function() {
         this.remove();
+        location.reload();
     });
 }
 
@@ -973,6 +989,7 @@ async function handleQuickTransfer() {
 
         if (transferResponse.ok) {
             showAlert('success', `Transfer talebi oluşturuldu! (Transfer #${result.transferId})`);
+            setTimeout(() => location.reload(), 1500);
         } else {
             showAlert('danger', result.message || 'Transfer talebi oluşturulamadı.');
         }

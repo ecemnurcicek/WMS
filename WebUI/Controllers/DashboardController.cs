@@ -22,10 +22,8 @@ namespace WebUI.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            // Session'dan kullanıcı ID'sini al
             var userIdObj = HttpContext.Session.GetInt32("UserId");
             
-            // Eğer session'da kullanıcı yok, login sayfasına yönlendir
             if (!userIdObj.HasValue)
             {
                 _logger.LogWarning("Dashboard'a yetkisiz erişim denemesi");

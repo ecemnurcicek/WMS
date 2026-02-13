@@ -181,7 +181,13 @@
             // Mesaj
             const body = document.getElementById('alertModalBody');
             body.className = 'modal-body alert-' + type;
-            document.getElementById('alertModalMessage').textContent = message;
+            const msgEl = document.getElementById('alertModalMessage');
+            // HTML içerik kontrolü: eğer mesaj HTML tag içeriyorsa innerHTML, değilse textContent kullan
+            if (typeof message === 'string' && message.includes('<')) {
+                msgEl.innerHTML = message;
+            } else {
+                msgEl.textContent = message;
+            }
 
             // Tamam butonu
             const confirmBtn = document.getElementById('alertModalConfirmBtn');

@@ -553,21 +553,17 @@ namespace Business.Services
                     .OrderByDescending(s => s.TotalStock)
                     .ToList();
 
-                // Sadece stok varsa ekle
-                if (shopStocks.Any(s => s.TotalStock > 0))
+                results.Add(new ProductSearchResultDto
                 {
-                    results.Add(new ProductSearchResultDto
-                    {
-                        ProductId = product.Id,
-                        Barcode = product.Ean ?? "",
-                        Model = product.Model ?? "",
-                        Color = product.Color ?? "",
-                        Size = product.Size ?? "",
-                        Description = product.Description ?? "",
-                        CoverUrl = product.CoverUrl,
-                        ShopStocks = shopStocks
-                    });
-                }
+                    ProductId = product.Id,
+                    Barcode = product.Ean ?? "",
+                    Model = product.Model ?? "",
+                    Color = product.Color ?? "",
+                    Size = product.Size ?? "",
+                    Description = product.Description ?? "",
+                    CoverUrl = product.CoverUrl,
+                    ShopStocks = shopStocks
+                });
             }
 
             return results;

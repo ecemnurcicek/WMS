@@ -31,10 +31,8 @@ namespace WebUI.Controllers
                 return View(loginDto);
             }
 
-            // Exception handling otomatik olarak ExceptionHandlingMiddleware tarafından yapılacak
             var result = await _loginService.LoginAsync(loginDto);
 
-            // Store user info in session
             HttpContext.Session.SetInt32("UserId", result.UserId.Value);
             HttpContext.Session.SetString("UserName", result.UserName);
             HttpContext.Session.SetString("UserEmail", result.UserEmail);

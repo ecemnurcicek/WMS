@@ -139,12 +139,12 @@ namespace Business.Services
 
         public async Task<List<TransferDto>> GetOutgoingByShopIdAsync(int shopId)
         {
-            // Göndereceğim: ToShopId = shopId (Ben gönderenim), İptal edilenler hariç
+            // Göndereceğim: ToShopId = shopId (Ben gönderenim)
             var list = await _context.Transfers
                 .Include(t => t.FromShop).ThenInclude(s => s!.Brand)
                 .Include(t => t.ToShop).ThenInclude(s => s!.Brand)
                 .Include(t => t.Details)
-                .Where(t => t.ToShopId == shopId && t.Status != 3)
+                .Where(t => t.ToShopId == shopId)
                 .OrderByDescending(t => t.CreatedAt)
                 .Select(t => new TransferDto
                 {
@@ -294,37 +294,67 @@ namespace Business.Services
             return true;
         }
 
-        public async Task<bool> UpdateStatusAsync(int transferId, int status, int updatedBy)
+        public async Task<TransferStatusResultDto> UpdateStatusAsync(int transferId, int status, int updatedBy)
         {
             var transfer = await _context.Transfers
                 .Include(t => t.Details)
+                    .ThenInclude(d => d.Product)
                 .FirstOrDefaultAsync(t => t.Id == transferId);
             
             if (transfer == null)
                 throw new Exception("Transfer bulunamadı");
 
+            var result = new TransferStatusResultDto
+            {
+                Success = true,
+                FinalStatus = status
+            };
+
             // Eğer status=1 (Gönderildi) ise stok kontrolü ve işlemleri yap
             if (status == 1)
             {
-                await ProcessTransferSendingAsync(transfer, updatedBy);
+                result = await ProcessTransferSendingAsync(transfer, updatedBy);
+
+                // Eğer otomatik iptal edildiyse status = 3
+                if (result.AutoCancelled)
+                {
+                    transfer.Status = 3; // İptal
+                    result.FinalStatus = 3;
+                }
+                else
+                {
+                    transfer.Status = status;
+                    result.FinalStatus = status;
+                }
+            }
+            else
+            {
+                transfer.Status = status;
             }
 
-            transfer.Status = status;
             transfer.UpdatedAt = DateTime.Now;
             transfer.UpdatedBy = updatedBy;
 
             _context.Transfers.Update(transfer);
             await _context.SaveChangesAsync();
 
-            return true;
+            return result;
         }
 
         /// <summary>
         /// Transfer gönderilirken stok kontrolü ve işlemleri yapar
+        /// Tüm ürünlerde stok 0 ise transferi otomatik iptal eder
         /// </summary>
-        private async Task ProcessTransferSendingAsync(Transfer transfer, int userId)
+        private async Task<TransferStatusResultDto> ProcessTransferSendingAsync(Transfer transfer, int userId)
         {
-            var warnings = new List<string>();
+            var result = new TransferStatusResultDto
+            {
+                Success = true,
+                FinalStatus = 1
+            };
+
+            // Önce tüm ürünlerin stok durumunu kontrol et
+            var stockInfoList = new List<(Core.Entities.TransferDetail detail, List<Core.Entities.ProductShelf> shelves, int available, int requested)>();
 
             foreach (var detail in transfer.Details)
             {
@@ -339,26 +369,63 @@ namespace Business.Services
                     .ToListAsync();
 
                 var totalAvailableStock = productShelves.Sum(ps => ps.Quantity);
-                // Kullanıcının belirlediği adet (QuantitySent) öncelikli, yoksa istenen adet (QuantityRequired)
-                var requestedQuantity = detail.QuantitySent == 0 ? detail.QuantityRequired : detail.QuantitySent;
+                var requestedQuantity = detail.QuantitySent == 0 ? (detail.QuantityRequired ?? 0) : detail.QuantitySent;
+
+                stockInfoList.Add((detail, productShelves, totalAvailableStock, requestedQuantity));
+
+                // Stok uyarısı oluştur
+                if (totalAvailableStock < requestedQuantity)
+                {
+                    result.Warnings.Add(new StockWarningDto
+                    {
+                        ProductId = detail.ProductId,
+                        ProductModel = detail.Product?.Model ?? "",
+                        ProductColor = detail.Product?.Color ?? "",
+                        ProductSize = detail.Product?.Size ?? "",
+                        QuantityRequested = requestedQuantity,
+                        QuantityAvailable = totalAvailableStock,
+                        QuantitySent = Math.Min(totalAvailableStock, requestedQuantity)
+                    });
+                }
+            }
+
+            // Tüm ürünlerde stok 0 mı kontrol et → Otomatik İptal
+            var allZeroStock = stockInfoList.All(s => s.available == 0);
+
+            if (allZeroStock)
+            {
+                // Tüm ürünlerde stok yok → Transfer otomatik iptal edilecek
+                result.AutoCancelled = true;
+                result.FinalStatus = 3;
+                result.Message = "Transferdeki hiçbir ürün için yeterli stok bulunmamaktadır. Transfer otomatik olarak iptal edildi.";
+
+                // QuantitySent'leri 0 olarak güncelle
+                foreach (var (detail, _, _, _) in stockInfoList)
+                {
+                    detail.QuantitySent = 0;
+                    detail.UpdateAt = DateTime.Now;
+                    detail.UpdateBy = userId;
+                }
+
+                return result;
+            }
+
+            // En az bir üründe stok var → Gönderim yapılabilir
+            foreach (var (detail, productShelves, totalAvailableStock, requestedQuantity) in stockInfoList)
+            {
                 var quantityToSend = 0;
 
                 if (totalAvailableStock == 0)
                 {
-                    // Hiç stok yok
                     quantityToSend = 0;
-                    warnings.Add($"Ürün {detail.ProductId} için stok bulunmamaktadır.");
                 }
                 else if (totalAvailableStock < requestedQuantity)
                 {
-                    // Yeterli stok yok, sadece mevcut stok kadar gönderilecek
                     quantityToSend = totalAvailableStock;
-                    warnings.Add($"Ürün {detail.ProductId} için yeterli stok yok. İstenilen: {requestedQuantity}, Gönderilen: {quantityToSend}");
                 }
                 else
                 {
-                    // Yeterli stok var
-                    quantityToSend = requestedQuantity ?? 0;
+                    quantityToSend = requestedQuantity;
                 }
 
                 // QuantitySent güncelle
@@ -377,12 +444,11 @@ namespace Business.Services
 
                     if (quantityFromThisShelf > 0)
                     {
-                        // ProductTransaction kaydı ekle
                         var transaction = new ProductTransaction
                         {
                             ProductId = detail.ProductId,
                             FromShelfId = productShelf.ShelfId,
-                            ToShelfId = null, // Henüz alıcı mağazada rafa atanmadı
+                            ToShelfId = null,
                             TransactionType = "TRANSFER_OUT",
                             TransferId = transfer.Id,
                             Quantity = quantityFromThisShelf,
@@ -391,11 +457,9 @@ namespace Business.Services
                         };
                         _context.ProductTransactions.Add(transaction);
 
-                        // ProductShelves'teki miktarı azalt
                         productShelf.Quantity -= quantityFromThisShelf;
                         if (productShelf.Quantity == 0)
                         {
-                            // Stok bittiyse kaydı sil
                             _context.ProductShelves.Remove(productShelf);
                         }
                         else
@@ -408,16 +472,17 @@ namespace Business.Services
                 }
             }
 
-            // Uyarılar varsa loglayabiliriz veya başka bir yerde kullanabiliriz
-            if (warnings.Any())
+            // Uyarı varsa mesajı oluştur
+            if (result.Warnings.Any())
             {
-                // Log sistemine warnings yazılabilir
-                foreach (var warning in warnings)
-                {
-                    // TODO: Warning sistemine ekle
-                    Console.WriteLine($"UYARI: {warning}");
-                }
+                result.Message = "Bazı ürünlerde yeterli stok bulunamadı. Mevcut stok kadar gönderim yapıldı.";
             }
+            else
+            {
+                result.Message = "Transfer başarıyla gönderildi.";
+            }
+
+            return result;
         }
 
         public async Task<bool> UpdateDetailAsync(TransferDetailDto detail)

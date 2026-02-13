@@ -527,8 +527,22 @@ function updateDetailQuantitySent(detailId, quantity, userId) {
     })
     .then(response => {
         if (!response.ok) throw new Error('Update failed');
-        AlertModal.success('Gönderilen adet güncellendi');
-        document.querySelector(`.sent-qty-${detailId}`).textContent = quantity;
+        AlertModal.success('Gönderilen adet güncellendi', () => {
+            // Detay modalını yeniden yükle
+            const statusBtn = document.querySelector('#detailModal [onclick*="statusFromDetail"]');
+            if (statusBtn) {
+                const onclickAttr = statusBtn.getAttribute('onclick');
+                const match = onclickAttr.match(/statusFromDetail\((\d+)/);
+                if (match) {
+                    const transferId = parseInt(match[1]);
+                    const detailModal = bootstrap.Modal.getInstance(document.getElementById('detailModal'));
+                    if (detailModal) detailModal.hide();
+                    setTimeout(() => viewTransferDetail(transferId), 300);
+                    return;
+                }
+            }
+            location.reload();
+        });
     })
     .catch(error => {
         console.error('Error:', error);
@@ -642,20 +656,72 @@ function updateStatusOnly(transferId, status, userId, statusText) {
     })
     .then(response => {
         if (!response.ok) throw new Error('Update failed');
-        
+        return response.json();
+    })
+    .then(result => {
         const modal = bootstrap.Modal.getInstance(document.getElementById('statusModal'));
         if (modal) modal.hide();
         
         setTimeout(() => {
-            AlertModal.success(`Transfer durumu "${statusText[status]}" olarak güncellendi`, () => {
-                location.reload();
-            });
+            // Stok kontrolü sonucu - Otomatik iptal
+            if (result.autoCancelled) {
+                let warningHtml = buildStockWarningHtml(result);
+                AlertModal.error(warningHtml, () => {
+                    location.reload();
+                });
+            }
+            // Stok uyarıları var ama gönderim yapılabildi
+            else if (result.warnings && result.warnings.length > 0) {
+                let warningHtml = buildStockWarningHtml(result);
+                AlertModal.warning(warningHtml, () => {
+                    location.reload();
+                });
+            }
+            // Her şey yolunda
+            else {
+                AlertModal.success(`Transfer durumu "${statusText[result.finalStatus || status]}" olarak güncellendi`, () => {
+                    location.reload();
+                });
+            }
         }, 300);
     })
     .catch(error => {
         console.error('Error:', error);
         AlertModal.error('Durum güncellenirken bir hata oluştu');
     });
+}
+
+// Stok uyarı HTML'i oluştur
+function buildStockWarningHtml(result) {
+    let html = '';
+    
+    if (result.autoCancelled) {
+        html += '<div style="text-align:center;margin-bottom:15px;"><i class="fas fa-exclamation-triangle fa-3x" style="color:#dc3545;"></i></div>';
+        html += '<h5 style="text-align:center;color:#dc3545;margin-bottom:10px;">Transfer Otomatik İptal Edildi!</h5>';
+        html += '<p style="text-align:center;margin-bottom:15px;">Transferdeki hiçbir ürün için yeterli stok bulunmamaktadır.</p>';
+    } else {
+        html += '<div style="text-align:center;margin-bottom:15px;"><i class="fas fa-exclamation-circle fa-3x" style="color:#ffc107;"></i></div>';
+        html += '<h5 style="text-align:center;color:#856404;margin-bottom:10px;">Yetersiz Stok Uyarısı</h5>';
+        html += '<p style="text-align:center;margin-bottom:15px;">Bazı ürünlerde yeterli stok bulunamadı. Mevcut stok kadar gönderim yapıldı.</p>';
+    }
+    
+    if (result.warnings && result.warnings.length > 0) {
+        html += '<table class="table table-sm table-bordered" style="font-size:13px;">';
+        html += '<thead class="table-light"><tr><th>Ürün</th><th class="text-center">İstenen</th><th class="text-center">Mevcut Stok</th><th class="text-center">Gönderilen</th></tr></thead>';
+        html += '<tbody>';
+        result.warnings.forEach(w => {
+            const rowClass = w.quantityAvailable === 0 ? 'table-danger' : 'table-warning';
+            html += `<tr class="${rowClass}">`;
+            html += `<td><strong>${w.productModel}</strong> - ${w.productColor} - ${w.productSize}</td>`;
+            html += `<td class="text-center">${w.quantityRequested}</td>`;
+            html += `<td class="text-center"><strong class="text-danger">${w.quantityAvailable}</strong></td>`;
+            html += `<td class="text-center">${w.quantitySent}</td>`;
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+    }
+    
+    return html;
 }
 
 // Update transfer status from detail modal
@@ -707,14 +773,28 @@ function updateTransferStatusWithUserId(transferId, status, userId) {
     })
     .then(response => {
         if (!response.ok) throw new Error('Update failed');
-        
+        return response.json();
+    })
+    .then(result => {
         const modal = bootstrap.Modal.getInstance(document.getElementById('detailModal'));
         if (modal) modal.hide();
         
         setTimeout(() => {
-            AlertModal.success(`Transfer durumu "${statusText[status]}" olarak güncellendi`, () => {
-                location.reload();
-            });
+            if (result.autoCancelled) {
+                let warningHtml = buildStockWarningHtml(result);
+                AlertModal.error(warningHtml, () => {
+                    location.reload();
+                });
+            } else if (result.warnings && result.warnings.length > 0) {
+                let warningHtml = buildStockWarningHtml(result);
+                AlertModal.warning(warningHtml, () => {
+                    location.reload();
+                });
+            } else {
+                AlertModal.success(`Transfer durumu "${statusText[result.finalStatus || status]}" olarak güncellendi`, () => {
+                    location.reload();
+                });
+            }
         }, 300);
     })
     .catch(error => {

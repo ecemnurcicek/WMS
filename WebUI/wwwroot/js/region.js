@@ -202,16 +202,3 @@ function showAlert(message, type) {
         alert(message);
     }
 }
-
-// Show alert
-function showAlert(message, type) {
-    if (typeof AlertModal !== 'undefined' && AlertModal.bootstrapModal) {
-        if (type === 'success') {
-            AlertModal.success(message);
-        } else {
-            AlertModal.error(message);
-        }
-    } else {
-        alert(message);
-    }
-}

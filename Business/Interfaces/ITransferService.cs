@@ -51,8 +51,9 @@ namespace Business.Interfaces
 
         /// <summary>
         /// Transfer durumunu günceller (0: Bekliyor, 1: Gönderildi, 2: Tamamlandı, 3: İptal)
+        /// Stok kontrolü yapar, tüm ürünlerde stok yoksa otomatik iptal eder
         /// </summary>
-        Task<bool> UpdateStatusAsync(int transferId, int status, int updatedBy);
+        Task<TransferStatusResultDto> UpdateStatusAsync(int transferId, int status, int updatedBy);
 
         /// <summary>
         /// Transfer detayı günceller (gönderilen adet güncellemesi için)

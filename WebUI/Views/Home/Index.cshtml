@@ -204,7 +204,9 @@
                         </h6>
             `;
             
-            if (product.shopStocks && product.shopStocks.length > 0) {
+            const hasStock = product.shopStocks && product.shopStocks.some(s => s.totalStock > 0);
+
+            if (hasStock) {
                 html += '<div class="table-responsive">';
                 html += '<table class="table table-sm table-hover mb-0">';
                 html += '<thead><tr><th>Mağaza</th><th>Marka</th><th class="text-end">Stok</th></tr></thead>';
@@ -222,7 +224,15 @@
                 
                 html += '</tbody></table></div>';
             } else {
-                html += '<p class="text-muted mb-0">Stok bulunamadı</p>';
+                html += `
+                    <div class="alert alert-warning d-flex align-items-center mb-0" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2 fa-lg"></i>
+                        <div>
+                            <strong>Ürün stoğu yoktur.</strong><br>
+                            <small class="text-muted">Bu ürün için herhangi bir mağazada stok bulunmamaktadır.</small>
+                        </div>
+                    </div>
+                `;
             }
             
             html += `

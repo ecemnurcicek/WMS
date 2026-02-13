@@ -114,8 +114,8 @@ namespace WebAPI.Controllers
         [HttpPut("{id}/status")]
         public async Task<IActionResult> UpdateStatus(int id, [FromBody] StatusUpdateRequest request)
         {
-            await _transferService.UpdateStatusAsync(id, request.Status, request.UpdatedBy);
-            return Ok();
+            var result = await _transferService.UpdateStatusAsync(id, request.Status, request.UpdatedBy);
+            return Ok(result);
         }
 
         /// <summary>
