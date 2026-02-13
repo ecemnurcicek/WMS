@@ -32,6 +32,7 @@ namespace WebUI.Controllers
             ViewData["UserEmail"] = user?.Email ?? "email@example.com";
             ViewData["UserRoles"] = userRoles;
             ViewData["UserShopId"] = user?.ShopId;
+            ViewData["UserId"] = userIdObj.Value;
 
             // Kullanıcı rollerine göre transfer listesi
             List<TransferDto> transfers;
@@ -43,18 +44,33 @@ namespace WebUI.Controllers
                 transfers = response.IsSuccessStatusCode 
                     ? await response.Content.ReadFromJsonAsync<List<TransferDto>>() ?? new List<TransferDto>()
                     : new List<TransferDto>();
+
+                ViewBag.OutgoingTransfers = new List<TransferDto>();
+                ViewBag.IncomingTransfers = new List<TransferDto>();
             }
             else if (user?.ShopId.HasValue == true)
             {
-                // Sadece kendi mağazasına ait transferleri görebilir
-                var response = await _httpClient.GetAsync($"/api/transfer/shop/{user.ShopId}");
-                transfers = response.IsSuccessStatusCode 
-                    ? await response.Content.ReadFromJsonAsync<List<TransferDto>>() ?? new List<TransferDto>()
+                // Göndereceğim: ToShopId = myShopId (İptal edilenler hariç)
+                var outgoingResponse = await _httpClient.GetAsync($"/api/transfer/shop/{user.ShopId}/outgoing");
+                var outgoing = outgoingResponse.IsSuccessStatusCode
+                    ? await outgoingResponse.Content.ReadFromJsonAsync<List<TransferDto>>() ?? new List<TransferDto>()
                     : new List<TransferDto>();
+
+                // Beklediğim: FromShopId = myShopId
+                var incomingResponse = await _httpClient.GetAsync($"/api/transfer/shop/{user.ShopId}/incoming");
+                var incoming = incomingResponse.IsSuccessStatusCode
+                    ? await incomingResponse.Content.ReadFromJsonAsync<List<TransferDto>>() ?? new List<TransferDto>()
+                    : new List<TransferDto>();
+
+                ViewBag.OutgoingTransfers = outgoing;
+                ViewBag.IncomingTransfers = incoming;
+                transfers = new List<TransferDto>();
             }
             else
             {
                 transfers = new List<TransferDto>();
+                ViewBag.OutgoingTransfers = new List<TransferDto>();
+                ViewBag.IncomingTransfers = new List<TransferDto>();
             }
 
             // Markaları al
@@ -130,6 +146,9 @@ namespace WebUI.Controllers
             ViewBag.IsAdminOrManager = IsAdminOrManager(userRoles);
             ViewBag.UserId = HttpContext.Session.GetInt32("UserId");
 
+            var detailUser = await _userService.GetUserByIdAsync(HttpContext.Session.GetInt32("UserId") ?? 0);
+            ViewBag.UserShopId = detailUser?.ShopId;
+
             return PartialView("_DetailModal", transfer);
         }
 
@@ -144,6 +163,20 @@ namespace WebUI.Controllers
             ViewBag.UserId = HttpContext.Session.GetInt32("UserId");
             
             return PartialView("_DeleteModal", transfer);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> StatusConfirm(int id, int status)
+        {
+            var response = await _httpClient.GetAsync($"/api/transfer/{id}");
+            if (!response.IsSuccessStatusCode)
+                return NotFound();
+
+            var transfer = await response.Content.ReadFromJsonAsync<TransferDto>();
+            ViewBag.UserId = HttpContext.Session.GetInt32("UserId");
+            ViewBag.NewStatus = status;
+            
+            return PartialView("_StatusModal", transfer);
         }
 
         [HttpGet]

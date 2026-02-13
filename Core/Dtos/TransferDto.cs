@@ -18,7 +18,7 @@ namespace Core.Dtos
         public int Id { get; set; }
         public int FromShopId { get; set; }
         public int ToShopId { get; set; }
-        public string Name { get; set; } = null!;
+        public string? Name { get; set; }
         public DateTime CreateAt { get; set; }
         public int CreateBy { get; set; }
         public DateTime? UpdateAt { get; set; }
@@ -32,6 +32,7 @@ namespace Core.Dtos
         public string? ToBrandName { get; set; }
         public string? CreatedByName { get; set; }
         public int DetailCount { get; set; }
+        public int TotalQuantity { get; set; }
 
         public string StatusText => Status switch
         {

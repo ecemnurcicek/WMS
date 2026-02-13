@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
 function initializeTransferManagement() {
     setupEventListeners();
     setupFilters();
+    setupTabFilters();
 }
 
 // Setup event listeners
@@ -24,7 +25,7 @@ function setupEventListeners() {
     }
 }
 
-// Setup filters
+// Setup filters (Admin view)
 function setupFilters() {
     const filterStatus = document.getElementById('filterStatus');
     const filterBrand = document.getElementById('filterBrand');
@@ -41,7 +42,76 @@ function setupFilters() {
     }
 }
 
-// Apply filters
+// Setup tab filters (Shop user view)
+function setupTabFilters() {
+    // Outgoing tab filters
+    const outgoingStatus = document.getElementById('outgoingFilterStatus');
+    const outgoingSearch = document.getElementById('outgoingFilterSearch');
+    if (outgoingStatus) {
+        outgoingStatus.addEventListener('change', function() {
+            applyTabFilters('outgoingTable');
+        });
+    }
+    if (outgoingSearch) {
+        outgoingSearch.addEventListener('input', function() {
+            applyTabFilters('outgoingTable');
+        });
+    }
+
+    // Incoming tab filters
+    const incomingStatus = document.getElementById('incomingFilterStatus');
+    const incomingSearch = document.getElementById('incomingFilterSearch');
+    if (incomingStatus) {
+        incomingStatus.addEventListener('change', function() {
+            applyTabFilters('incomingTable');
+        });
+    }
+    if (incomingSearch) {
+        incomingSearch.addEventListener('input', function() {
+            applyTabFilters('incomingTable');
+        });
+    }
+
+    // Sayfa açılışında filtreleri uygula (varsayılan "Bekliyor" seçili)
+    if (outgoingStatus) applyTabFilters('outgoingTable');
+    if (incomingStatus) applyTabFilters('incomingTable');
+}
+
+// Apply tab-specific filters
+function applyTabFilters(tableId) {
+    let statusFilter, searchFilter;
+    
+    if (tableId === 'outgoingTable') {
+        statusFilter = document.getElementById('outgoingFilterStatus')?.value || '';
+        searchFilter = document.getElementById('outgoingFilterSearch')?.value?.toLowerCase() || '';
+    } else {
+        statusFilter = document.getElementById('incomingFilterStatus')?.value || '';
+        searchFilter = document.getElementById('incomingFilterSearch')?.value?.toLowerCase() || '';
+    }
+
+    const table = document.getElementById(tableId);
+    if (!table) return;
+
+    const rows = table.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        const status = row.dataset.status || '';
+        const transferName = row.querySelector('.transfer-name')?.textContent?.toLowerCase() || '';
+
+        let show = true;
+
+        if (statusFilter && status !== statusFilter) {
+            show = false;
+        }
+
+        if (searchFilter && !transferName.includes(searchFilter)) {
+            show = false;
+        }
+
+        row.style.display = show ? '' : 'none';
+    });
+}
+
+// Apply filters (Admin view)
 function applyFilters() {
     const statusFilter = document.getElementById('filterStatus')?.value || '';
     const brandFilter = document.getElementById('filterBrand')?.value || '';
@@ -150,6 +220,12 @@ function setupFormListeners() {
         btnAddProduct.addEventListener('click', addProductToTransfer);
     }
     
+    // Non-admin: auto-load shops from same brand
+    const userBrandId = document.getElementById('userBrandId')?.value;
+    if (userBrandId && !isAdminOrManager) {
+        loadShopsByBrand(userBrandId, 'toShopId');
+    }
+
     // Form submit
     const form = document.getElementById('transferForm');
     if (form) {
@@ -176,8 +252,12 @@ function loadShopsByBrand(brandId, selectId) {
     fetch(`/Transfer/GetShopsByBrand?brandId=${brandId}`)
         .then(response => response.json())
         .then(shops => {
+            const userShopId = document.getElementById('currentUserShopId')?.value || 
+                               document.getElementById('fromShopId')?.value || '';
             select.innerHTML = '<option value="">-- Mağaza Seçiniz --</option>';
             shops.forEach(shop => {
+                // Kullanıcının kendi mağazasını listeden çıkar
+                if (userShopId && shop.id.toString() === userShopId.toString()) return;
                 const option = document.createElement('option');
                 option.value = shop.id;
                 option.textContent = shop.name;
@@ -233,7 +313,7 @@ function selectProduct(product) {
 // Add product to transfer
 function addProductToTransfer() {
     if (!selectedProduct) {
-        showAlert('Lütfen bir ürün seçin', 'error');
+        AlertModal.error('Lütfen bir ürün seçin');
         return;
     }
     
@@ -323,22 +403,22 @@ function submitTransferForm() {
     const userId = document.getElementById('userId').value;
     
     if (!fromShopId) {
-        showAlert('Lütfen talep eden mağazayı seçin', 'error');
+        AlertModal.error('Lütfen talep eden mağazayı seçin');
         return;
     }
     
     if (!toShopId) {
-        showAlert('Lütfen gönderen mağazayı seçin', 'error');
+        AlertModal.error('Lütfen gönderen mağazayı seçin');
         return;
     }
     
     if (fromShopId === toShopId) {
-        showAlert('Talep eden ve gönderen mağaza aynı olamaz', 'error');
+        AlertModal.error('Talep eden ve gönderen mağaza aynı olamaz');
         return;
     }
     
     if (transferDetails.length === 0) {
-        showAlert('Lütfen en az bir ürün ekleyin', 'error');
+        AlertModal.error('Lütfen en az bir ürün ekleyin');
         return;
     }
     
@@ -366,17 +446,23 @@ function submitTransferForm() {
         if (!response.ok) {
             return response.text().then(text => { throw new Error(text); });
         }
-        return response.json();
+        return response.text().then(text => {
+            try { return text ? JSON.parse(text) : {}; } catch(e) { return {}; }
+        });
     })
     .then(data => {
-        showAlert('Transfer talebi başarıyla oluşturuldu', 'success');
         const modal = bootstrap.Modal.getInstance(document.getElementById('formModal'));
-        modal.hide();
-        setTimeout(() => location.reload(), 1000);
+        if (modal) modal.hide();
+        
+        setTimeout(() => {
+            AlertModal.success('Transfer talebi başarıyla oluşturuldu', () => {
+                location.reload();
+            });
+        }, 300);
     })
     .catch(error => {
         console.error('Error:', error);
-        showAlert('Transfer oluşturulurken bir hata oluştu: ' + error.message, 'error');
+        AlertModal.error('Transfer oluşturulurken bir hata oluştu: ' + error.message);
     });
 }
 
@@ -395,7 +481,7 @@ function viewTransferDetail(transferId) {
         })
         .catch(error => {
             console.error('Error:', error);
-            showAlert('Detay yüklenirken bir hata oluştu', 'error');
+        showAlert('Detay yüklenirken bir hata oluştu', 'error');
         });
 }
 
@@ -428,31 +514,110 @@ function updateDetailQuantitySent(detailId, quantity, userId) {
     })
     .then(response => {
         if (!response.ok) throw new Error('Update failed');
-        showAlert('Gönderilen adet güncellendi', 'success');
+        AlertModal.success('Gönderilen adet güncellendi');
         document.querySelector(`.sent-qty-${detailId}`).textContent = quantity;
     })
     .catch(error => {
         console.error('Error:', error);
-        showAlert('Güncelleme sırasında bir hata oluştu', 'error');
+        AlertModal.error('Güncelleme sırasında bir hata oluştu');
     });
 }
 
-// Update transfer status
+// Update transfer status - modal ile onay
 function updateTransferStatus(transferId, status) {
-    const userId = document.querySelector('[data-user-id]')?.dataset.userId || 
-                   document.getElementById('userId')?.value || 0;
+    fetch(`/Transfer/StatusConfirm?id=${transferId}&status=${status}`)
+        .then(response => response.text())
+        .then(html => {
+            // statusModalContainer yoksa oluştur
+            let container = document.getElementById('statusModalContainer');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'statusModalContainer';
+                document.body.appendChild(container);
+            }
+            container.innerHTML = html;
+            
+            const modal = new bootstrap.Modal(document.getElementById('statusModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('Modal yüklenirken bir hata oluştu', 'error');
+        });
+}
+
+// Confirm status update from modal
+function confirmStatusUpdate() {
+    const transferId = document.getElementById('statusTransferId').value;
+    const userId = document.getElementById('statusUserId').value;
+    const status = parseInt(document.getElementById('statusNewValue').value);
     
     const statusText = {
         1: 'Gönderildi',
         2: 'Tamamlandı',
         3: 'İptal Edildi'
     };
-    
-    if (!confirm(`Bu transferi "${statusText[status]}" olarak işaretlemek istediğinizden emin misiniz?`)) {
-        return;
+
+    // Status 1 (Gönderildi) ise önce detay miktarlarını güncelle
+    if (status === 1) {
+        const qtyInputs = document.querySelectorAll('.status-qty-input');
+        if (qtyInputs.length === 0) {
+            updateStatusOnly(transferId, status, userId, statusText);
+            return;
+        }
+
+        // Miktar validasyonu
+        let hasError = false;
+        qtyInputs.forEach(input => {
+            const val = parseInt(input.value) || 0;
+            const max = parseInt(input.max) || 0;
+            if (val < 0 || val > max) {
+                hasError = true;
+                input.classList.add('is-invalid');
+            } else {
+                input.classList.remove('is-invalid');
+            }
+        });
+
+        if (hasError) {
+            AlertModal.error('Lütfen geçerli miktarlar girin (0 ile istenen arasında)');
+            return;
+        }
+
+        // Tüm detay miktarlarını sırayla güncelle
+        const updatePromises = Array.from(qtyInputs).map(input => {
+            const detailId = input.dataset.detailId;
+            const qty = parseInt(input.value) || 0;
+            return fetch(`/api/transfer/detail/${detailId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: parseInt(detailId),
+                    quantitySend: qty,
+                    updateBy: parseInt(userId)
+                })
+            });
+        });
+
+        Promise.all(updatePromises)
+            .then(responses => {
+                const allOk = responses.every(r => r.ok);
+                if (!allOk) throw new Error('Detail update failed');
+                // Miktarlar güncellendi, şimdi durumu güncelle
+                return updateStatusOnly(transferId, status, userId, statusText);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('Gönderim miktarları güncellenirken bir hata oluştu', 'error');
+            });
+    } else {
+        updateStatusOnly(transferId, status, userId, statusText);
     }
-    
-    fetch(`/api/transfer/${transferId}/status`, {
+}
+
+// Sadece transfer durumunu güncelle
+function updateStatusOnly(transferId, status, userId, statusText) {
+    return fetch(`/api/transfer/${transferId}/status`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json'
@@ -464,12 +629,19 @@ function updateTransferStatus(transferId, status) {
     })
     .then(response => {
         if (!response.ok) throw new Error('Update failed');
-        showAlert(`Transfer durumu "${statusText[status]}" olarak güncellendi`, 'success');
-        setTimeout(() => location.reload(), 1000);
+        
+        const modal = bootstrap.Modal.getInstance(document.getElementById('statusModal'));
+        if (modal) modal.hide();
+        
+        setTimeout(() => {
+            AlertModal.success(`Transfer durumu "${statusText[status]}" olarak güncellendi`, () => {
+                location.reload();
+            });
+        }, 300);
     })
     .catch(error => {
         console.error('Error:', error);
-        showAlert('Durum güncellenirken bir hata oluştu', 'error');
+        AlertModal.error('Durum güncellenirken bir hata oluştu');
     });
 }
 
@@ -477,6 +649,26 @@ function updateTransferStatus(transferId, status) {
 function updateTransferStatusFromDetail(transferId, status) {
     const userId = document.querySelector('.btn-update-qty')?.dataset.userId || 0;
     updateTransferStatusWithUserId(transferId, status, userId);
+}
+
+// Detay modal'ından gönderildi/tamamlandı yap - önce detay modal kapat, sonra onay modal aç
+function statusFromDetail(transferId, status) {
+    const detailModal = bootstrap.Modal.getInstance(document.getElementById('detailModal'));
+    if (detailModal) detailModal.hide();
+    
+    setTimeout(() => {
+        updateTransferStatus(transferId, status);
+    }, 300);
+}
+
+// Detay modal'ından iptal et - önce detay modal kapat, sonra iptal modal aç
+function cancelFromDetail(transferId) {
+    const detailModal = bootstrap.Modal.getInstance(document.getElementById('detailModal'));
+    if (detailModal) detailModal.hide();
+    
+    setTimeout(() => {
+        deleteTransfer(transferId);
+    }, 300);
 }
 
 function updateTransferStatusWithUserId(transferId, status, userId) {
@@ -502,16 +694,19 @@ function updateTransferStatusWithUserId(transferId, status, userId) {
     })
     .then(response => {
         if (!response.ok) throw new Error('Update failed');
-        showAlert(`Transfer durumu "${statusText[status]}" olarak güncellendi`, 'success');
         
-        // Close modal and reload
         const modal = bootstrap.Modal.getInstance(document.getElementById('detailModal'));
         if (modal) modal.hide();
-        setTimeout(() => location.reload(), 1000);
+        
+        setTimeout(() => {
+            AlertModal.success(`Transfer durumu "${statusText[status]}" olarak güncellendi`, () => {
+                location.reload();
+            });
+        }, 300);
     })
     .catch(error => {
         console.error('Error:', error);
-        showAlert('Durum güncellenirken bir hata oluştu', 'error');
+        AlertModal.error('Durum güncellenirken bir hata oluştu');
     });
 }
 
@@ -548,23 +743,34 @@ function confirmDeleteTransfer() {
     })
     .then(response => {
         if (!response.ok) throw new Error('Delete failed');
-        showAlert('Transfer iptal edildi', 'success');
         
         const modal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
-        modal.hide();
-        setTimeout(() => location.reload(), 1000);
+        if (modal) modal.hide();
+        
+        setTimeout(() => {
+            AlertModal.success('Transfer başarıyla iptal edildi', () => {
+                location.reload();
+            });
+        }, 300);
     })
     .catch(error => {
         console.error('Error:', error);
-        showAlert('İptal işlemi sırasında bir hata oluştu', 'error');
+        AlertModal.error('İptal işlemi sırasında bir hata oluştu');
     });
 }
 
-// Show alert helper
+// Show alert helper - AlertModal kullan
 function showAlert(message, type) {
-    // Check if site.js has showAlert function
-    if (typeof window.showAlert === 'function') {
-        window.showAlert(message, type);
+    if (typeof AlertModal !== 'undefined') {
+        if (type === 'success') {
+            AlertModal.success(message);
+        } else if (type === 'error') {
+            AlertModal.error(message);
+        } else if (type === 'warning') {
+            AlertModal.warning(message);
+        } else {
+            AlertModal.info(message);
+        }
         return;
     }
     

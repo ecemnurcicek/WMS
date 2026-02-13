@@ -2,6 +2,8 @@
 @{
     var isAdminOrManager = ViewBag.IsAdminOrManager as bool? ?? false;
     var userId = ViewBag.UserId as int? ?? 0;
+    var userShopId = ViewBag.UserShopId as int? ?? 0;
+    var isReceiver = userShopId > 0 && userShopId == Model.FromShopId;
 }
 
 <!-- Detail Modal -->
@@ -178,17 +180,17 @@
             <div class="modal-footer">
                 @if (Model.Status == 0)
                 {
-                    <button type="button" class="btn btn-success" onclick="updateTransferStatusFromDetail(@Model.Id, 1)">
+                    <button type="button" class="btn btn-success" onclick="statusFromDetail(@Model.Id, 1)">
                         <i class="fas fa-shipping-fast me-2"></i>Gönderildi Yap
                     </button>
-                    <button type="button" class="btn btn-danger" onclick="cancelTransferFromDetail(@Model.Id)">
+                    <button type="button" class="btn btn-danger" onclick="cancelFromDetail(@Model.Id)">
                         <i class="fas fa-times me-2"></i>İptal Et
                     </button>
                 }
-                @if (Model.Status == 1)
+                @if (Model.Status == 1 && isReceiver)
                 {
-                    <button type="button" class="btn btn-primary" onclick="updateTransferStatusFromDetail(@Model.Id, 2)">
-                        <i class="fas fa-check-double me-2"></i>Tamamlandı Yap
+                    <button type="button" class="btn btn-primary" onclick="statusFromDetail(@Model.Id, 2)">
+                        <i class="fas fa-check-double me-2"></i>Teslim Aldım
                     </button>
                 }
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>

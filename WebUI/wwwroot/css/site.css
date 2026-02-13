@@ -29,7 +29,8 @@ body {
 /* Dashboard Layout */
 .dashboard-container {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
   background-color: #f5f7fa;
 }
 
@@ -126,7 +127,8 @@ body {
   /*margin-left: 280px;*/
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .dashboard-topbar {
@@ -214,6 +216,7 @@ body {
   padding: 30px 30px 30px 310px;
   overflow-y: auto;
   max-width: 100%;
+  min-height: 0;
 }
 
 /* Card Styles */

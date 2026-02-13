@@ -4,15 +4,24 @@
     ViewData["Title"] = "Transfer Yönetimi";
     Layout = "_Layout";
     var userRoles = ViewData["UserRoles"]?.ToString() ?? "";
+    var userShopId = ViewData["UserShopId"];
+    var userId = ViewData["UserId"];
     var isAdminOrManager = userRoles.Contains("Admin") || 
                            userRoles.Contains("Bölge Sorumlusu") || 
                            userRoles.Contains("Marka Sorumlusu") ||
                            userRoles.Contains("RegionManager") ||
                            userRoles.Contains("BrandManager");
+    var outgoingTransfers = ViewBag.OutgoingTransfers as List<Core.Dtos.TransferDto> ?? new List<Core.Dtos.TransferDto>();
+    var incomingTransfers = ViewBag.IncomingTransfers as List<Core.Dtos.TransferDto> ?? new List<Core.Dtos.TransferDto>();
 }
 
 <link rel="stylesheet" href="~/css/transfer.css" asp-append-version="true" />
 <script src="~/js/transfer.js" asp-append-version="true"></script>
+
+<!-- Hidden data for JS -->
+<input type="hidden" id="currentUserId" value="@userId" />
+<input type="hidden" id="currentUserShopId" value="@userShopId" />
+<input type="hidden" id="isAdminOrManagerFlag" value="@isAdminOrManager.ToString().ToLower()" />
 
 <div class="page-container transfer-container">
     <!-- Header -->
@@ -25,20 +34,20 @@
         </button>
     </div>
 
-    <!-- Filtreler -->
-    <div class="transfer-filters">
-        <div class="filter-group">
-            <label for="filterStatus">Durum</label>
-            <select id="filterStatus" class="form-select">
-                <option value="">Tümü</option>
-                <option value="0">Bekliyor</option>
-                <option value="1">Gönderildi</option>
-                <option value="2">Tamamlandı</option>
-                <option value="3">İptal Edildi</option>
-            </select>
-        </div>
-        @if (isAdminOrManager)
-        {
+    @if (isAdminOrManager)
+    {
+        <!-- ===== ADMIN VIEW: Single table, all transfers ===== -->
+        <div class="transfer-filters">
+            <div class="filter-group">
+                <label for="filterStatus">Durum</label>
+                <select id="filterStatus" class="form-select">
+                    <option value="">Tümü</option>
+                    <option value="0">Bekliyor</option>
+                    <option value="1">Gönderildi</option>
+                    <option value="2">Tamamlandı</option>
+                    <option value="3">İptal Edildi</option>
+                </select>
+            </div>
             <div class="filter-group">
                 <label for="filterBrand">Marka</label>
                 <select id="filterBrand" class="form-select">
@@ -49,107 +58,355 @@
                     }
                 </select>
             </div>
-        }
-        <div class="filter-group">
-            <label for="filterSearch">Ara</label>
-            <input type="text" id="filterSearch" class="form-control" placeholder="Transfer kodu ara...">
-        </div>
-    </div>
-
-    <!-- Transfers Table -->
-    <div class="transfer-table-wrapper">
-        @if (Model.Any())
-        {
-            <table class="table table-hover transfer-table" id="transferTable">
-                <thead class="table-header-style">
-                    <tr>
-                        <th>#</th>
-                        <th>Transfer Kodu</th>
-                        <th>Talep Eden</th>
-                        <th>Gönderen</th>
-                        <th>Ürün Sayısı</th>
-                        <th>Oluşturma Tarihi</th>
-                        <th>Durum</th>
-                        <th class="action-column">İşlemler</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var transfer in Model)
-                    {
-                        <tr data-transfer-id="@transfer.Id" 
-                            data-status="@transfer.Status"
-                            data-from-brand="@transfer.FromBrandName"
-                            data-to-brand="@transfer.ToBrandName">
-                            <td>@transfer.Id</td>
-                            <td class="transfer-name">
-                                <code>@transfer.Name</code>
-                            </td>
-                            <td>
-                                <div class="shop-info">
-                                    <span class="shop-name">@transfer.FromShopName</span>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="shop-info">
-                                    <span class="shop-name">@transfer.ToShopName</span>
-                                </div>
-                            </td>
-                            <td>
-                                <span class="badge bg-info">@transfer.DetailCount Ürün</span>
-                            </td>
-                            <td>@transfer.CreateAt.ToString("dd.MM.yyyy HH:mm")</td>
-                            <td>
-                                @switch (transfer.Status)
-                                {
-                                    case 0:
-                                        <span class="badge status-pending">Bekliyor</span>
-                                        break;
-                                    case 1:
-                                        <span class="badge status-sent">Gönderildi</span>
-                                        break;
-                                    case 2:
-                                        <span class="badge status-completed">Tamamlandı</span>
-                                        break;
-                                    case 3:
-                                        <span class="badge status-cancelled">İptal Edildi</span>
-                                        break;
-                                }
-                            </td>
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="btn btn-info btn-sm" onclick="viewTransferDetail(@transfer.Id)" title="Detay">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                    @if (transfer.Status == 0)
-                                    {
-                                        <button class="btn btn-success btn-sm" onclick="updateTransferStatus(@transfer.Id, 1)" title="Gönderildi Yap">
-                                            <i class="fas fa-shipping-fast"></i>
-                                        </button>
-                                        <button class="btn btn-delete btn-sm" onclick="deleteTransfer(@transfer.Id)" title="İptal Et">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    }
-                                    @if (transfer.Status == 1)
-                                    {
-                                        <button class="btn btn-primary btn-sm" onclick="updateTransferStatus(@transfer.Id, 2)" title="Tamamlandı Yap">
-                                            <i class="fas fa-check-double"></i>
-                                        </button>
-                                    }
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
-        else
-        {
-            <div class="empty-state">
-                <i class="fas fa-inbox"></i>
-                <p>Henüz transfer talebi bulunmamaktadır</p>
+            <div class="filter-group">
+                <label for="filterSearch">Ara</label>
+                <input type="text" id="filterSearch" class="form-control" placeholder="Transfer kodu ara...">
             </div>
-        }
-    </div>
+        </div>
+
+        <div class="transfer-table-wrapper">
+            @if (Model.Any())
+            {
+                <table class="table table-hover transfer-table" id="transferTable">
+                    <thead class="table-header-style">
+                        <tr>
+                            <th>#</th>
+                            <th>Transfer Kodu</th>
+                            <th>Talep Eden</th>
+                            <th>Gönderen</th>
+                            <th>Ürün Sayısı</th>
+                            <th>Oluşturma Tarihi</th>
+                            <th>Durum</th>
+                            <th class="action-column">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var transfer in Model)
+                        {
+                            <tr data-transfer-id="@transfer.Id" 
+                                data-status="@transfer.Status"
+                                data-from-brand="@transfer.FromBrandName"
+                                data-to-brand="@transfer.ToBrandName">
+                                <td>@transfer.Id</td>
+                                <td class="transfer-name">
+                                    <code>@transfer.Name</code>
+                                </td>
+                                <td>
+                                    <div class="shop-info">
+                                        <span class="shop-name">@transfer.FromShopName</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="shop-info">
+                                        <span class="shop-name">@transfer.ToShopName</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">@transfer.DetailCount Ürün</span>
+                                    <span class="badge bg-secondary ms-1">@transfer.TotalQuantity Adet</span>
+                                </td>
+                                <td>@transfer.CreateAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                <td>
+                                    @switch (transfer.Status)
+                                    {
+                                        case 0:
+                                            <span class="badge status-pending">Bekliyor</span>
+                                            break;
+                                        case 1:
+                                            <span class="badge status-sent">Gönderildi</span>
+                                            break;
+                                        case 2:
+                                            <span class="badge status-completed">Tamamlandı</span>
+                                            break;
+                                        case 3:
+                                            <span class="badge status-cancelled">İptal Edildi</span>
+                                            break;
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">
+                                            <i class="fas fa-cog me-1"></i>İşlemler
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li>
+                                                <a class="dropdown-item" href="javascript:void(0)" onclick="viewTransferDetail(@transfer.Id)">
+                                                    <i class="fas fa-eye me-2 text-info"></i>Detay
+                                                </a>
+                                            </li>
+                                            @if (transfer.Status == 0)
+                                            {
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <a class="dropdown-item" href="javascript:void(0)" onclick="updateTransferStatus(@transfer.Id, 1)">
+                                                        <i class="fas fa-shipping-fast me-2 text-success"></i>Gönder
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item" href="javascript:void(0)" onclick="deleteTransfer(@transfer.Id)">
+                                                        <i class="fas fa-times me-2 text-danger"></i>İptal Et
+                                                    </a>
+                                                </li>
+                                            }
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>Henüz transfer talebi bulunmamaktadır</p>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <!-- ===== SHOP USER VIEW: Two tabs ===== -->
+        <div class="transfer-tabs-container">
+            <ul class="nav nav-tabs transfer-nav-tabs" id="transferTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="outgoing-tab" data-bs-toggle="tab" data-bs-target="#outgoingContent" 
+                            type="button" role="tab" aria-controls="outgoingContent" aria-selected="true">
+                        <i class="fas fa-paper-plane me-2"></i>Göndereceğim Transferler
+                        <span class="badge bg-primary ms-2">@outgoingTransfers.Count(t => t.Status == 0)</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="incoming-tab" data-bs-toggle="tab" data-bs-target="#incomingContent" 
+                            type="button" role="tab" aria-controls="incomingContent" aria-selected="false">
+                        <i class="fas fa-inbox me-2"></i>Beklediğim Transferler
+                        <span class="badge bg-warning text-dark ms-2">@incomingTransfers.Count(t => t.Status == 0 || t.Status == 1)</span>
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="transferTabContent">
+                <!-- ===== Göndereceğim Transferler Tab ===== -->
+                <div class="tab-pane fade show active" id="outgoingContent" role="tabpanel" aria-labelledby="outgoing-tab">
+                    <!-- Outgoing Filters -->
+                    <div class="transfer-filters tab-filters">
+                        <div class="filter-group">
+                            <label for="outgoingFilterStatus">Durum</label>
+                            <select id="outgoingFilterStatus" class="form-select" data-table="outgoingTable">
+                                <option value="">Tümü</option>
+                                <option value="0" selected>Bekliyor</option>
+                                <option value="1">Gönderildi</option>
+                                <option value="2">Tamamlandı</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="outgoingFilterSearch">Ara</label>
+                            <input type="text" id="outgoingFilterSearch" class="form-control" placeholder="Transfer kodu ara..." data-table="outgoingTable">
+                        </div>
+                    </div>
+
+                    <div class="transfer-table-wrapper">
+                        @if (outgoingTransfers.Any())
+                        {
+                            <table class="table table-hover transfer-table" id="outgoingTable">
+                                <thead class="table-header-style table-header-outgoing">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Transfer Kodu</th>
+                                        <th>Talep Eden Mağaza</th>
+                                        <th>Ürün Sayısı</th>
+                                        <th>Oluşturma Tarihi</th>
+                                        <th>Durum</th>
+                                        <th class="action-column">İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var transfer in outgoingTransfers)
+                                    {
+                                        <tr data-transfer-id="@transfer.Id" 
+                                            data-status="@transfer.Status"
+                                            data-tab="outgoing">
+                                            <td>@transfer.Id</td>
+                                            <td class="transfer-name">
+                                                <code>@transfer.Name</code>
+                                            </td>
+                                            <td>
+                                                <div class="shop-info">
+                                                    <span class="shop-name">@transfer.FromShopName</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">@transfer.DetailCount Ürün</span>
+                                                <span class="badge bg-secondary ms-1">@transfer.TotalQuantity Adet</span>
+                                            </td>
+                                            <td>@transfer.CreateAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                            <td>
+                                                @switch (transfer.Status)
+                                                {
+                                                    case 0:
+                                                        <span class="badge status-pending">Bekliyor</span>
+                                                        break;
+                                                    case 1:
+                                                        <span class="badge status-sent">Gönderildi</span>
+                                                        break;
+                                                    case 2:
+                                                        <span class="badge status-completed">Tamamlandı</span>
+                                                        break;
+                                                }
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">
+                                                        <i class="fas fa-cog me-1"></i>İşlemler
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        <li>
+                                                            <a class="dropdown-item" href="javascript:void(0)" onclick="viewTransferDetail(@transfer.Id)">
+                                                                <i class="fas fa-eye me-2 text-info"></i>Detay
+                                                            </a>
+                                                        </li>
+                                                        @if (transfer.Status == 0)
+                                                        {
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li>
+                                                                <a class="dropdown-item" href="javascript:void(0)" onclick="updateTransferStatus(@transfer.Id, 1)">
+                                                                    <i class="fas fa-shipping-fast me-2 text-success"></i>Gönder
+                                                                </a>
+                                                            </li>
+                                                            <li>
+                                                                <a class="dropdown-item" href="javascript:void(0)" onclick="deleteTransfer(@transfer.Id)">
+                                                                    <i class="fas fa-times me-2 text-danger"></i>İptal Et
+                                                                </a>
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+                            <div class="empty-state">
+                                <i class="fas fa-paper-plane"></i>
+                                <p>Göndereceğiniz transfer talebi bulunmamaktadır</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- ===== Beklediğim Transferler Tab ===== -->
+                <div class="tab-pane fade" id="incomingContent" role="tabpanel" aria-labelledby="incoming-tab">
+                    <!-- Incoming Filters -->
+                    <div class="transfer-filters tab-filters">
+                        <div class="filter-group">
+                            <label for="incomingFilterStatus">Durum</label>
+                            <select id="incomingFilterStatus" class="form-select" data-table="incomingTable">
+                                <option value="">Tümü</option>
+                                <option value="waiting" selected>Bekliyor</option>
+                                <option value="2">Tamamlandı</option>
+                                <option value="3">Karşı Mağaza İptal Etti</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="incomingFilterSearch">Ara</label>
+                            <input type="text" id="incomingFilterSearch" class="form-control" placeholder="Transfer kodu ara..." data-table="incomingTable">
+                        </div>
+                    </div>
+
+                    <div class="transfer-table-wrapper">
+                        @if (incomingTransfers.Any())
+                        {
+                            <table class="table table-hover transfer-table" id="incomingTable">
+                                <thead class="table-header-style table-header-incoming">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Transfer Kodu</th>
+                                        <th>Gönderen Mağaza</th>
+                                        <th>Ürün Sayısı</th>
+                                        <th>Oluşturma Tarihi</th>
+                                        <th>Durum</th>
+                                        <th class="action-column">İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var transfer in incomingTransfers)
+                                    {
+                                        <tr data-transfer-id="@transfer.Id" 
+                                            data-status="@(transfer.Status <= 1 ? "waiting" : transfer.Status.ToString())"
+                                            data-tab="incoming">
+                                            <td>@transfer.Id</td>
+                                            <td class="transfer-name">
+                                                <code>@transfer.Name</code>
+                                            </td>
+                                            <td>
+                                                <div class="shop-info">
+                                                    <span class="shop-name">@transfer.ToShopName</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">@transfer.DetailCount Ürün</span>
+                                                <span class="badge bg-secondary ms-1">@transfer.TotalQuantity Adet</span>
+                                            </td>
+                                            <td>@transfer.CreateAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                            <td>
+                                                @switch (transfer.Status)
+                                                {
+                                                    case 0:
+                                                    case 1:
+                                                        <span class="badge status-pending">Bekliyor</span>
+                                                        break;
+                                                    case 2:
+                                                        <span class="badge status-completed">Tamamlandı</span>
+                                                        break;
+                                                    case 3:
+                                                        <span class="badge status-cancelled-other">Karşı Mağaza İptal Etti</span>
+                                                        break;
+                                                }
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">
+                                                        <i class="fas fa-cog me-1"></i>İşlemler
+                                                    </button>
+                                                    <ul class="dropdown-menu dropdown-menu-end">
+                                                        <li>
+                                                            <a class="dropdown-item" href="javascript:void(0)" onclick="viewTransferDetail(@transfer.Id)">
+                                                                <i class="fas fa-eye me-2 text-info"></i>Detay
+                                                            </a>
+                                                        </li>
+                                                        @if (transfer.Status == 1)
+                                                        {
+                                                            <li><hr class="dropdown-divider"></li>
+                                                            <li>
+                                                                <a class="dropdown-item" href="javascript:void(0)" onclick="updateTransferStatus(@transfer.Id, 2)">
+                                                                    <i class="fas fa-check-double me-2 text-primary"></i>Teslim Al
+                                                                </a>
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+                            <div class="empty-state">
+                                <i class="fas fa-inbox"></i>
+                                <p>Beklediğiniz transfer talebi bulunmamaktadır</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 <!-- Form Modal Container -->
@@ -160,3 +417,6 @@
 
 <!-- Delete Modal Container -->
 <div id="deleteModalContainer"></div>
+
+<!-- Status Modal Container -->
+<div id="statusModalContainer"></div>

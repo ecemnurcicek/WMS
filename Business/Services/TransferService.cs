@@ -48,7 +48,8 @@ namespace Business.Services
                     ToShopName = t.ToShop != null ? t.ToShop.Name : "",
                     FromBrandName = t.FromShop != null && t.FromShop.Brand != null ? t.FromShop.Brand.Name : "",
                     ToBrandName = t.ToShop != null && t.ToShop.Brand != null ? t.ToShop.Brand.Name : "",
-                    DetailCount = t.Details.Count
+                    DetailCount = t.Details.Count,
+                    TotalQuantity = t.Details.Sum(d => d.QuantityRequired ?? 0)
                 })
                 .ToListAsync();
 
@@ -81,7 +82,8 @@ namespace Business.Services
                 ToShopName = transfer.ToShop?.Name ?? "",
                 FromBrandName = transfer.FromShop?.Brand?.Name ?? "",
                 ToBrandName = transfer.ToShop?.Brand?.Name ?? "",
-                DetailCount = transfer.Details.Count
+                DetailCount = transfer.Details.Count,
+                TotalQuantity = transfer.Details.Sum(d => d.QuantityRequired ?? 0)
             };
 
             dto.Details = transfer.Details.Select(d => new TransferDetailDto
@@ -127,7 +129,72 @@ namespace Business.Services
                     ToShopName = t.ToShop != null ? t.ToShop.Name : "",
                     FromBrandName = t.FromShop != null && t.FromShop.Brand != null ? t.FromShop.Brand.Name : "",
                     ToBrandName = t.ToShop != null && t.ToShop.Brand != null ? t.ToShop.Brand.Name : "",
-                    DetailCount = t.Details.Count
+                    DetailCount = t.Details.Count,
+                    TotalQuantity = t.Details.Sum(d => d.QuantityRequired ?? 0)
+                })
+                .ToListAsync();
+
+            return list;
+        }
+
+        public async Task<List<TransferDto>> GetOutgoingByShopIdAsync(int shopId)
+        {
+            // Göndereceğim: ToShopId = shopId (Ben gönderenim), İptal edilenler hariç
+            var list = await _context.Transfers
+                .Include(t => t.FromShop).ThenInclude(s => s!.Brand)
+                .Include(t => t.ToShop).ThenInclude(s => s!.Brand)
+                .Include(t => t.Details)
+                .Where(t => t.ToShopId == shopId && t.Status != 3)
+                .OrderByDescending(t => t.CreatedAt)
+                .Select(t => new TransferDto
+                {
+                    Id = t.Id,
+                    FromShopId = t.FromShopId,
+                    ToShopId = t.ToShopId,
+                    Name = t.Name ?? "",
+                    CreateAt = t.CreatedAt,
+                    CreateBy = t.CreatedBy ?? 0,
+                    UpdateAt = t.UpdatedAt,
+                    UpdateBy = t.UpdatedBy,
+                    Status = t.Status,
+                    FromShopName = t.FromShop != null ? t.FromShop.Name : "",
+                    ToShopName = t.ToShop != null ? t.ToShop.Name : "",
+                    FromBrandName = t.FromShop != null && t.FromShop.Brand != null ? t.FromShop.Brand.Name : "",
+                    ToBrandName = t.ToShop != null && t.ToShop.Brand != null ? t.ToShop.Brand.Name : "",
+                    DetailCount = t.Details.Count,
+                    TotalQuantity = t.Details.Sum(d => d.QuantityRequired ?? 0)
+                })
+                .ToListAsync();
+
+            return list;
+        }
+
+        public async Task<List<TransferDto>> GetIncomingByShopIdAsync(int shopId)
+        {
+            // Beklediğim: FromShopId = shopId (Ben talep edenim)
+            var list = await _context.Transfers
+                .Include(t => t.FromShop).ThenInclude(s => s!.Brand)
+                .Include(t => t.ToShop).ThenInclude(s => s!.Brand)
+                .Include(t => t.Details)
+                .Where(t => t.FromShopId == shopId)
+                .OrderByDescending(t => t.CreatedAt)
+                .Select(t => new TransferDto
+                {
+                    Id = t.Id,
+                    FromShopId = t.FromShopId,
+                    ToShopId = t.ToShopId,
+                    Name = t.Name ?? "",
+                    CreateAt = t.CreatedAt,
+                    CreateBy = t.CreatedBy ?? 0,
+                    UpdateAt = t.UpdatedAt,
+                    UpdateBy = t.UpdatedBy,
+                    Status = t.Status,
+                    FromShopName = t.FromShop != null ? t.FromShop.Name : "",
+                    ToShopName = t.ToShop != null ? t.ToShop.Name : "",
+                    FromBrandName = t.FromShop != null && t.FromShop.Brand != null ? t.FromShop.Brand.Name : "",
+                    ToBrandName = t.ToShop != null && t.ToShop.Brand != null ? t.ToShop.Brand.Name : "",
+                    DetailCount = t.Details.Count,
+                    TotalQuantity = t.Details.Sum(d => d.QuantityRequired ?? 0)
                 })
                 .ToListAsync();
 
@@ -158,7 +225,8 @@ namespace Business.Services
                     ToShopName = t.ToShop != null ? t.ToShop.Name : "",
                     FromBrandName = t.FromShop != null && t.FromShop.Brand != null ? t.FromShop.Brand.Name : "",
                     ToBrandName = t.ToShop != null && t.ToShop.Brand != null ? t.ToShop.Brand.Name : "",
-                    DetailCount = t.Details.Count
+                    DetailCount = t.Details.Count,
+                    TotalQuantity = t.Details.Sum(d => d.QuantityRequired ?? 0)
                 })
                 .ToListAsync();
 

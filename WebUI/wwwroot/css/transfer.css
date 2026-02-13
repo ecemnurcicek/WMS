@@ -6,6 +6,38 @@
   gap: 20px;
 }
 
+/* Dropdown taşma düzeltmesi */
+.transfer-table td {
+  position: relative;
+}
+
+.transfer-table .btn-group .dropdown-menu {
+  position: absolute;
+  z-index: 1050;
+}
+
+.transfer-tabs-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.transfer-tabs-container .tab-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.transfer-tabs-container .tab-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.transfer-tabs-container .tab-pane:not(.active) {
+  display: none;
+}
+
 .transfer-header {
   display: flex;
   justify-content: space-between;
@@ -59,7 +91,8 @@
   background: white;
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
+  overflow: visible;
+  flex: 1;
 }
 
 .transfer-table {
@@ -147,6 +180,84 @@
   padding: 6px 12px;
   border-radius: 20px;
   font-weight: 600;
+}
+
+.status-cancelled-other {
+  background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%);
+  color: #424242;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+/* Transfer Tabs */
+.transfer-tabs-container {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.transfer-nav-tabs {
+  border-bottom: 2px solid #e9ecef;
+  padding: 0 20px;
+  background: #fafbfc;
+}
+
+.transfer-nav-tabs .nav-item {
+  margin-bottom: -2px;
+}
+
+.transfer-nav-tabs .nav-link {
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: #666;
+  font-weight: 600;
+  padding: 16px 24px;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+.transfer-nav-tabs .nav-link:hover {
+  color: #667eea;
+  border-bottom-color: #667eea40;
+  background: transparent;
+}
+
+.transfer-nav-tabs .nav-link.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+  background: transparent;
+}
+
+.transfer-nav-tabs .nav-link .badge {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+
+.tab-filters {
+  margin: 0;
+  border-radius: 0;
+  box-shadow: none;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.tab-content .transfer-table-wrapper {
+  border-radius: 0;
+  box-shadow: none;
+  flex: 1;
+}
+
+/* Outgoing header - blue-purple gradient */
+.table-header-outgoing {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Incoming header - warm gradient */
+.table-header-incoming {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
 
 /* Brand Badge */

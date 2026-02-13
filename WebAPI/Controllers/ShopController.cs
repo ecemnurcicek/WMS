@@ -31,6 +31,13 @@ namespace WebAPI.Controllers
             return Ok(shop);
         }
 
+        [HttpGet("active")]
+        public async Task<IActionResult> GetActive()
+        {
+            var shops = await _shopService.GetAllAsync(pActive: true);
+            return Ok(shops);
+        }
+
         [HttpGet("town/{townId}")]
         public async Task<IActionResult> GetByTownId(int townId)
         {

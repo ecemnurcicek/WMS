@@ -11,7 +11,6 @@ namespace Core.Dtos
         public int Id { get; set; }
         public int? ShopId { get; set; }
         public string Name { get; set; } = null!;
-        public string Surname { get; set; } = null!;
         public string Email { get; set; } = null!;
         public string Phone { get; set; } = null!;
         public DateTime BirthDate { get; set; }
@@ -21,6 +20,14 @@ namespace Core.Dtos
         public int CreateBy { get; set; }
         public DateTime? UpdateAt { get; set; }
         public int? UpdateBy { get; set; }
+
+        // Form binding
+        public int? RoleId { get; set; }
+
+        // Display properties
+        public string? ShopName { get; set; }
+        public string? BrandName { get; set; }
+        public string? RoleName { get; set; }
     }
 }
 

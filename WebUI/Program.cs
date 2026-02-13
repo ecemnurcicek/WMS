@@ -57,6 +57,7 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
     await Data.DatabaseSeeder.SeedMenusAsync(context);
+    await Data.DatabaseSeeder.EnsureUserMenuAsync(context);
 }
 
 // Configure the HTTP request pipeline.
@@ -69,6 +70,16 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+// /api/ istekleri için request body buffering
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/api"))
+    {
+        context.Request.EnableBuffering();
+    }
+    await next();
+});
 
 app.UseRouting();
 

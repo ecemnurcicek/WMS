@@ -23,6 +23,12 @@ public class SidebarViewComponent : ViewComponent
             ? await _menuService.GetMenusByRoleIdsAsync(roleIds)
             : new List<Core.Dtos.MenuDto>();
 
+        // Report ve Settings menülerini kaldır
+        menus = menus.Where(m => 
+            !m.Path.Equals("/Report", StringComparison.OrdinalIgnoreCase) && 
+            !m.Path.Equals("/Settings", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
         return View(menus);
     }
 }

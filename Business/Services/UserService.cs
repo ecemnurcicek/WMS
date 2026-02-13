@@ -118,6 +118,86 @@ public class UserService : IUserService
         }
     }
 
+    public async Task<List<Core.Dtos.UserDto>> GetAllUserDtosAsync()
+    {
+        try
+        {
+            return await _context.Users
+                .Include(u => u.Shop).ThenInclude(s => s!.Brand)
+                .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+                .OrderByDescending(u => u.CreatedAt)
+                .Select(u => new Core.Dtos.UserDto
+                {
+                    Id = u.Id,
+                    ShopId = u.ShopId,
+                    Name = u.Name,
+                    Email = u.Email ?? "",
+                    Phone = u.Phone ?? "",
+                    BirthDate = u.BirthDate ?? DateTime.MinValue,
+                    Password = "",
+                    IsActive = u.IsActive,
+                    CreateAt = u.CreatedAt,
+                    CreateBy = u.CreatedBy ?? 0,
+                    UpdateAt = u.UpdatedAt,
+                    UpdateBy = u.UpdatedBy,
+                    RoleId = u.UserRoles.Any() ? u.UserRoles.First().RoleId : (int?)null,
+                    ShopName = u.Shop != null ? u.Shop.Name : "",
+                    BrandName = u.Shop != null && u.Shop.Brand != null ? u.Shop.Brand.Name : "",
+                    RoleName = u.UserRoles.Any() 
+                        ? string.Join(", ", u.UserRoles.Select(ur => ur.Role.Name))
+                        : "Rol Yok"
+                })
+                .ToListAsync();
+        }
+        catch (Exception ex)
+        {
+            throw new DataAccessException(
+                "Kullanıcı listesi alınırken hata oluştu.",
+                ex
+            );
+        }
+    }
+
+    public async Task<Core.Dtos.UserDto?> GetUserDtoByIdAsync(int userId)
+    {
+        try
+        {
+            return await _context.Users
+                .Include(u => u.Shop).ThenInclude(s => s!.Brand)
+                .Include(u => u.UserRoles).ThenInclude(ur => ur.Role)
+                .Where(u => u.Id == userId)
+                .Select(u => new Core.Dtos.UserDto
+                {
+                    Id = u.Id,
+                    ShopId = u.ShopId,
+                    Name = u.Name,
+                    Email = u.Email ?? "",
+                    Phone = u.Phone ?? "",
+                    BirthDate = u.BirthDate ?? DateTime.MinValue,
+                    Password = "",
+                    IsActive = u.IsActive,
+                    CreateAt = u.CreatedAt,
+                    CreateBy = u.CreatedBy ?? 0,
+                    UpdateAt = u.UpdatedAt,
+                    UpdateBy = u.UpdatedBy,
+                    RoleId = u.UserRoles.Any() ? u.UserRoles.First().RoleId : (int?)null,
+                    ShopName = u.Shop != null ? u.Shop.Name : "",
+                    BrandName = u.Shop != null && u.Shop.Brand != null ? u.Shop.Brand.Name : "",
+                    RoleName = u.UserRoles.Any() 
+                        ? string.Join(", ", u.UserRoles.Select(ur => ur.Role.Name))
+                        : "Rol Yok"
+                })
+                .FirstOrDefaultAsync();
+        }
+        catch (Exception ex)
+        {
+            throw new DataAccessException(
+                $"Kullanıcı (ID: {userId}) sorgulanırken hata oluştu.",
+                ex
+            );
+        }
+    }
+
     public async Task<User> CreateUserAsync(User user)
     {
         if (user == null)

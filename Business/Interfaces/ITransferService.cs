@@ -25,6 +25,16 @@ namespace Business.Interfaces
         Task<List<TransferDto>> GetByShopIdAsync(int shopId);
 
         /// <summary>
+        /// Mağazanın göndereceği transferleri getirir (ToShopId = shopId, İptal edilenler hariç)
+        /// </summary>
+        Task<List<TransferDto>> GetOutgoingByShopIdAsync(int shopId);
+
+        /// <summary>
+        /// Mağazanın beklediği transferleri getirir (FromShopId = shopId)
+        /// </summary>
+        Task<List<TransferDto>> GetIncomingByShopIdAsync(int shopId);
+
+        /// <summary>
         /// Markaya göre transferleri getirir
         /// </summary>
         Task<List<TransferDto>> GetByBrandIdAsync(int brandId);

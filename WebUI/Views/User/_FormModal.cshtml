@@ -1,0 +1,127 @@
+@model Core.Dtos.UserDto
+@{
+    var shops = ViewBag.Shops as IEnumerable<Core.Dtos.ShopDto> ?? new List<Core.Dtos.ShopDto>();
+    var roles = ViewBag.Roles as IEnumerable<WebUI.Controllers.UserController.RoleItem> ?? new List<WebUI.Controllers.UserController.RoleItem>();
+    bool isEdit = Model?.Id > 0;
+}
+
+<!-- User Form Modal -->
+<div class="modal fade" id="userFormModal" tabindex="-1" aria-labelledby="userFormModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <h5 class="modal-title" id="userFormModalTitle">
+                    @if (isEdit)
+                    {
+                        <text><i class="fas fa-user-edit me-2"></i>Kullanıcıyı Düzenle</text>
+                    }
+                    else
+                    {
+                        <text><i class="fas fa-user-plus me-2"></i>Yeni Kullanıcı Ekle</text>
+                    }
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="userForm">
+                <div class="modal-body">
+                    <input type="hidden" id="userId" name="Id" value="@(Model?.Id ?? 0)" />
+
+                    <!-- Ad -->
+                    <div class="form-group mb-3">
+                        <label for="userName">Ad Soyad <span style="color: #dc3545;">*</span></label>
+                        <input type="text" id="userName" name="Name" class="form-control" placeholder="Ad Soyad" value="@(Model?.Name ?? "")" required>
+                    </div>
+
+                    <!-- E-posta -->
+                    <div class="form-group mb-3">
+                        <label for="userEmail">E-posta <span style="color: #dc3545;">*</span></label>
+                        <input type="email" id="userEmail" name="Email" class="form-control" placeholder="ornek@mail.com" value="@(Model?.Email ?? "")" required>
+                    </div>
+
+                    <!-- Telefon -->
+                    <div class="form-group mb-3">
+                        <label for="userPhone">Telefon</label>
+                        <input type="text" id="userPhone" name="Phone" class="form-control" placeholder="05XX XXX XX XX" value="@(Model?.Phone ?? "")">
+                    </div>
+
+                    <!-- Şifre -->
+                    <div class="form-group mb-3">
+                        <label for="userPassword">
+                            Şifre
+                            @if (!isEdit)
+                            {
+                                <span style="color: #dc3545;">*</span>
+                            }
+                            else
+                            {
+                                <small class="text-muted">(Boş bırakılırsa değişmez)</small>
+                            }
+                        </label>
+                        <input type="password" id="userPassword" name="Password" class="form-control" placeholder="••••••••" @(isEdit ? "" : "required")>
+                    </div>
+
+                    <!-- Mağaza Seçimi -->
+                    <div class="form-group mb-3">
+                        <label for="userShopId">Mağaza</label>
+                        <select id="userShopId" name="ShopId" class="form-control">
+                            <option value="">-- Mağaza Seçiniz --</option>
+                            @foreach (var shop in shops)
+                            {
+                                if (Model?.ShopId == shop.Id)
+                                {
+                                    <option value="@shop.Id" selected>@shop.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@shop.Id">@shop.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Rol Seçimi -->
+                    <div class="form-group mb-3">
+                        <label for="userRoleId">Rol <span style="color: #dc3545;">*</span></label>
+                        <select id="userRoleId" name="RoleId" class="form-control" required>
+                            <option value="">-- Rol Seçiniz --</option>
+                            @foreach (var role in roles)
+                            {
+                                if (Model?.RoleId == role.Id)
+                                {
+                                    <option value="@role.Id" selected>@role.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@role.Id">@role.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Aktiflik Durumu -->
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input type="checkbox" id="userIsActive" name="IsActive" class="form-check-input" @(Model?.IsActive == true ? "checked" : "")>
+                            <label class="form-check-label" for="userIsActive">
+                                Aktif
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary" id="submitButton">
+                        @if (isEdit)
+                        {
+                            <text><i class="fas fa-save me-1"></i>Güncelle</text>
+                        }
+                        else
+                        {
+                            <text><i class="fas fa-plus me-1"></i>Ekle</text>
+                        }
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

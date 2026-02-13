@@ -114,19 +114,10 @@ public static class DatabaseSeeder
             },
             new Menu
             {
-                Name = "Raporlar",
-                Path = "/Report",
-                IconName = "fas fa-chart-bar",
+                Name = "Kullanıcılar",
+                Path = "/User",
+                IconName = "fas fa-users",
                 DisplayOrder = 11,
-                IsActive = true,
-                CreatedAt = DateTime.Now
-            },
-            new Menu
-            {
-                Name = "Sistem Ayarları",
-                Path = "/Settings",
-                IconName = "fas fa-cog",
-                DisplayOrder = 12,
                 IsActive = true,
                 CreatedAt = DateTime.Now
             }
@@ -136,19 +127,35 @@ public static class DatabaseSeeder
         await context.Menus.AddRangeAsync(menus);
         await context.SaveChangesAsync();
 
-        // Assign all menus to all roles initially
-        // You can customize this based on your requirements
+        // Assign menus to roles
+        // Kullanıcılar menu is admin-only, others are assigned to all roles
         var menuRoles = new List<MenuRole>();
         foreach (var menu in menus)
         {
-            foreach (var roleId in allRoleIds)
+            if (menu.Path == "/User")
             {
-                menuRoles.Add(new MenuRole
+                // Sadece Admin rolüne ata
+                if (adminRole != null)
                 {
-                    MenuId = menu.Id,
-                    RoleId = roleId,
-                    CreatedAt = DateTime.Now
-                });
+                    menuRoles.Add(new MenuRole
+                    {
+                        MenuId = menu.Id,
+                        RoleId = adminRole.Id,
+                        CreatedAt = DateTime.Now
+                    });
+                }
+            }
+            else
+            {
+                foreach (var roleId in allRoleIds)
+                {
+                    menuRoles.Add(new MenuRole
+                    {
+                        MenuId = menu.Id,
+                        RoleId = roleId,
+                        CreatedAt = DateTime.Now
+                    });
+                }
             }
         }
 
@@ -157,5 +164,41 @@ public static class DatabaseSeeder
             await context.MenuRoles.AddRangeAsync(menuRoles);
             await context.SaveChangesAsync();
         }
+    }
+
+    /// <summary>
+    /// Mevcut veritabanına "Kullanıcılar" menüsünü ekler (yoksa).
+    /// Sadece Admin rolüne atanır.
+    /// </summary>
+    public static async Task EnsureUserMenuAsync(ApplicationContext context)
+    {
+        var exists = await context.Menus.AnyAsync(m => m.Path == "/User");
+        if (exists) return;
+
+        var adminRole = await context.Set<Role>().FirstOrDefaultAsync(r => r.Name.Contains("Admin"));
+        if (adminRole == null) return;
+
+        var menu = new Menu
+        {
+            Name = "Kullanıcılar",
+            Path = "/User",
+            IconName = "fas fa-users",
+            DisplayOrder = 11,
+            IsActive = true,
+            CreatedAt = DateTime.Now
+        };
+
+        await context.Menus.AddAsync(menu);
+        await context.SaveChangesAsync();
+
+        var menuRole = new MenuRole
+        {
+            MenuId = menu.Id,
+            RoleId = adminRole.Id,
+            CreatedAt = DateTime.Now
+        };
+
+        await context.MenuRoles.AddAsync(menuRole);
+        await context.SaveChangesAsync();
     }
 }

@@ -48,6 +48,26 @@ namespace WebAPI.Controllers
         }
 
         /// <summary>
+        /// Mağazanın göndereceği transferleri getirir (ToShopId = shopId, iptal hariç)
+        /// </summary>
+        [HttpGet("shop/{shopId}/outgoing")]
+        public async Task<IActionResult> GetOutgoingByShopId(int shopId)
+        {
+            var transfers = await _transferService.GetOutgoingByShopIdAsync(shopId);
+            return Ok(transfers);
+        }
+
+        /// <summary>
+        /// Mağazanın beklediği transferleri getirir (FromShopId = shopId)
+        /// </summary>
+        [HttpGet("shop/{shopId}/incoming")]
+        public async Task<IActionResult> GetIncomingByShopId(int shopId)
+        {
+            var transfers = await _transferService.GetIncomingByShopIdAsync(shopId);
+            return Ok(transfers);
+        }
+
+        /// <summary>
         /// Markaya göre transferleri getirir
         /// </summary>
         [HttpGet("brand/{brandId}")]
