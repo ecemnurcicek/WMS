@@ -427,3 +427,22 @@
 
 <!-- Status Modal Container -->
 <div id="statusModalContainer"></div>
+<script>
+    // Check if we should auto-open the create modal
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('openModal') === 'true') {
+            // Remove the query parameter from URL
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
+            
+            // Open the create modal after a short delay
+            setTimeout(function() {
+                const btnAddTransfer = document.getElementById('btnAddTransfer');
+                if (btnAddTransfer) {
+                    btnAddTransfer.click();
+                }
+            }, 300);
+        }
+    });
+</script>

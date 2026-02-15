@@ -39,6 +39,24 @@ namespace WebUI.Controllers
         }
 
         [HttpGet]
+        public IActionResult CheckLoginAndRedirect()
+        {
+            // Check if user is logged in
+            var userId = HttpContext.Session.GetInt32("UserId");
+            
+            if (userId.HasValue)
+            {
+                // User is logged in, redirect to Dashboard
+                return RedirectToAction("Index", "Dashboard");
+            }
+            else
+            {
+                // User is not logged in, redirect to Login
+                return RedirectToAction("Login", "Account");
+            }
+        }
+
+        [HttpGet]
         public async Task<IActionResult> SearchProducts(string? query, int? brandId)
         {
             try
