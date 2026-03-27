@@ -62,6 +62,10 @@ WebUI, WebAPI'ye istemci tarafından doğrudan erişim yerine **ApiProxyControll
 
 ```
 WMS/
+├── Presentation/                # Proje Tanıtım Materyalleri
+│   ├── Screenshots/            # 20 Ekran Görüntüsü
+│   └── Videoshots/             # Proje Tanıtım Videosu (Wms_Project.mp4)
+│
 ├── WebUI/                      # MVC Sunum Katmanı
 │   ├── Controllers/           # 15 MVC Controller (+ ApiProxy)
 │   ├── Views/                 # Razor Views (16 klasör)
@@ -137,6 +141,41 @@ WMS/
 - **Özel Exception Hiyerarşisi** — BusinessException, ValidationException, NotFoundException, DataAccessException, BusinessRuleException
 - **Veritabanı Loglama** — Tüm hatalar Log tablosuna kaydedilir
 - **Generic Repository Pattern** — Tüm servisler için tekrar kullanılabilir CRUD altyapısı
+
+## 🎬 Proje Tanıtımı
+
+Projenin görsel tanıtım materyalleri `Presentation/` klasöründe yer almaktadır.
+
+### 📹 Video
+
+Projenin tüm özelliklerini gösteren tanıtım videosu:
+
+▶️ [`Presentation/Videoshots/Wms_Project.mp4`](Presentation/Videoshots/Wms_Project.mp4)
+
+### 📸 Ekran Görüntüleri
+
+| # | Ekran | Önizleme |
+|---|-------|----------|
+| 1 | Ana Sayfa | ![Ana Sayfa](Presentation/Screenshots/Ekran%20Görüntüsü%201.png) |
+| 2 | Giriş Ekranı | ![Giriş Ekranı](Presentation/Screenshots/Ekran%20Görüntüsü%202.png) |
+| 3 | Dashboard | ![Dashboard](Presentation/Screenshots/Ekran%20Görüntüsü%203.png) |
+| 4 | Bölge Yönetimi | ![Bölge Yönetimi](Presentation/Screenshots/Ekran%20Görüntüsü%204.png) |
+| 5 | Şehir Yönetimi | ![Şehir Yönetimi](Presentation/Screenshots/Ekran%20Görüntüsü%205.png) |
+| 6 | Ekran 6 | ![Ekran 6](Presentation/Screenshots/Ekran%20Görüntüsü%206.png) |
+| 7 | Ekran 7 | ![Ekran 7](Presentation/Screenshots/Ekran%20Görüntüsü%207.png) |
+| 8 | Ekran 8 | ![Ekran 8](Presentation/Screenshots/Ekran%20Görüntüsü%208.png) |
+| 9 | Ekran 9 | ![Ekran 9](Presentation/Screenshots/Ekran%20Görüntüsü%209.png) |
+| 10 | Ekran 10 | ![Ekran 10](Presentation/Screenshots/Ekran%20Görüntüsü%2010.png) |
+| 11 | Ekran 11 | ![Ekran 11](Presentation/Screenshots/Ekran%20Görüntüsü%2011.png) |
+| 12 | Ekran 12 | ![Ekran 12](Presentation/Screenshots/Ekran%20Görüntüsü%2012.png) |
+| 13 | Ekran 13 | ![Ekran 13](Presentation/Screenshots/Ekran%20Görüntüsü%2013.png) |
+| 14 | Ekran 14 | ![Ekran 14](Presentation/Screenshots/Ekran%20Görüntüsü%2014.png) |
+| 15 | Ekran 15 | ![Ekran 15](Presentation/Screenshots/Ekran%20Görüntüsü%2015.png) |
+| 16 | Ekran 16 | ![Ekran 16](Presentation/Screenshots/Ekran%20Görüntüsü%2016.png) |
+| 17 | Ekran 17 | ![Ekran 17](Presentation/Screenshots/Ekran%20Görüntüsü%2017.png) |
+| 18 | Ekran 18 | ![Ekran 18](Presentation/Screenshots/Ekran%20Görüntüsü%2018.png) |
+| 19 | Ekran 19 | ![Ekran 19](Presentation/Screenshots/Ekran%20Görüntüsü%2019.png) |
+| 20 | Ekran 20 | ![Ekran 20](Presentation/Screenshots/Ekran%20Görüntüsü%2020.png) |
 
 ## 🚀 Hızlı Başlangıç
 
