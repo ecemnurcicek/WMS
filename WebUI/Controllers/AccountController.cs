@@ -20,7 +20,24 @@ namespace WebUI.Controllers
         [HttpGet]
         public IActionResult Login()
         {
+            // Zaten login olmuş kullanıcıyı Dashboard'a yönlendir
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId.HasValue)
+            {
+                return RedirectToAction("Index", "Dashboard");
+            }
             return View();
+        }
+
+        [HttpGet]
+        public IActionResult CheckSession()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId.HasValue)
+            {
+                return RedirectToAction("Index", "Dashboard");
+            }
+            return RedirectToAction("Login");
         }
 
         [HttpPost]

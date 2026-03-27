@@ -13,6 +13,12 @@ function initializeTransferManagement() {
     setupFilters();
     setupTabFilters();
     setupCopyIcons();
+
+    // URL'de openCreate=true parametresi varsa otomatik olarak oluşturma modalını aç
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('openCreate') === 'true' || urlParams.get('openCreate') === 'True') {
+        openCreateModal();
+    }
 }
 
 // Setup event listeners

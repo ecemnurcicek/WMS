@@ -93,22 +93,18 @@
 <div class="quick-actions">
     <h3>Hızlı İşlemler</h3>
     <div class="actions-grid">
-        <button class="action-btn" onclick="showComingSoon('Yeni Ürün')">
+        <a class="action-btn" href="@Url.Action("Index", "Product", new { openCreate = true })">
             <i class="fas fa-plus-circle"></i>
             <span>Yeni Ürün</span>
-        </button>
-        <button class="action-btn" onclick="showComingSoon('Transfer Oluştur')">
+        </a>
+        <a class="action-btn" href="@Url.Action("Index", "Transfer", new { openCreate = true })">
             <i class="fas fa-arrow-right"></i>
             <span>Transfer Oluştur</span>
-        </button>
-        <button class="action-btn" onclick="showComingSoon('Stok Sorgula')">
+        </a>
+        <a class="action-btn" href="@Url.Action("Index", "Home")">
             <i class="fas fa-search"></i>
             <span>Stok Sorgula</span>
-        </button>
-        <button class="action-btn" onclick="showComingSoon('Raporlar')">
-            <i class="fas fa-file-pdf"></i>
-            <span>Raporlar</span>
-        </button>
+        </a>
     </div>
 </div>
 </div>

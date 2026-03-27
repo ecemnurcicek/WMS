@@ -19,6 +19,12 @@ document.addEventListener('DOMContentLoaded', function () {
             location.reload();
         }
     });
+
+    // URL'de openCreate=true parametresi varsa otomatik olarak oluşturma formunu aç
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('openCreate') === 'true' || urlParams.get('openCreate') === 'True') {
+        loadCreateForm();
+    }
 });
 
 // ========================================
