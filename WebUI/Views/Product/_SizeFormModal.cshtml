@@ -1,0 +1,138 @@
+@model Core.Dtos.ProductDto
+
+@{
+    var isEdit = Model.Id > 0;
+    var title = isEdit ? "Beden Düzenle" : "Yeni Beden Ekle";
+    var actionUrl = isEdit ? $"/Product/Update/{Model.Id}" : "/Product/CreateJson";
+}
+
+<div class="modal fade" id="sizeFormModal" tabindex="-1" aria-labelledby="sizeFormModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header @(isEdit ? "bg-warning" : "bg-success") text-white">
+                <h5 class="modal-title" id="sizeFormModalLabel">
+                    <i class="fas @(isEdit ? "fa-edit" : "fa-plus") me-2"></i>@title
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <form id="sizeForm" action="@actionUrl" method="post">
+                <div class="modal-body">
+                    <!-- Hidden Fields -->
+                    <input type="hidden" name="Id" value="@Model.Id" />
+                    
+                    <!-- Model ve Renk - Sadece görüntüle (yeni beden eklerken sabit) -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Model</label>
+                            <input type="text" class="form-control" name="Model" value="@Model.Model" @(isEdit ? "" : "readonly") required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Renk</label>
+                            <input type="text" class="form-control" name="Color" value="@Model.Color" @(isEdit ? "" : "readonly") required />
+                        </div>
+                    </div>
+
+                    <!-- Beden ve EAN -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="sizeSize" class="form-label">Beden <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="sizeSize" name="Size" value="@Model.Size" 
+                                   placeholder="Örn: S, M, L, XL, 38, 40..." required />
+                        </div>
+                        <div class="col-md-6">
+                            <label for="sizeEan" class="form-label">EAN Kodu <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control font-monospace" id="sizeEan" name="Ean" value="@Model.Ean" 
+                                   placeholder="13 haneli EAN kodu" 
+                                   minlength="13" maxlength="13" pattern="[0-9]{13}" required />
+                            <div class="form-text">EAN kodu tam 13 haneli rakam olmalıdır.</div>
+                        </div>
+                    </div>
+
+                    <!-- Fiyat -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="sizePrice" class="form-label">Fiyat (€) <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="sizePrice" name="Price" value="@Model.Price" 
+                                   step="0.01" min="0" required />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Durum</label>
+                            <div class="form-check form-switch mt-2">
+                                <input class="form-check-input" type="checkbox" id="sizeIsActive" name="IsActive" 
+                                       value="true" @(Model.IsActive ? "checked" : "") />
+                                <label class="form-check-label" for="sizeIsActive">Aktif</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Görsel URL -->
+                    <div class="mb-3">
+                        <label for="sizeCoverUrl" class="form-label">Görsel URL</label>
+                        <input type="url" class="form-control" id="sizeCoverUrl" name="CoverUrl" value="@Model.CoverUrl" 
+                               placeholder="https://example.com/image.jpg" />
+                    </div>
+
+                    <!-- Açıklama -->
+                    <div class="mb-3">
+                        <label for="sizeDescription" class="form-label">Açıklama</label>
+                        <textarea class="form-control" id="sizeDescription" name="Description" rows="3" 
+                                  placeholder="Ürün açıklaması...">@Model.Description</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>İptal
+                    </button>
+                    <button type="submit" class="btn @(isEdit ? "btn-warning" : "btn-success")">
+                        <i class="fas @(isEdit ? "fa-save" : "fa-plus") me-1"></i>@(isEdit ? "Güncelle" : "Ekle")
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('sizeForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // EAN validation
+    const ean = document.getElementById('sizeEan').value;
+    if (!/^\d{13}$/.test(ean)) {
+        alert('EAN kodu tam 13 haneli rakam olmalıdır.');
+        document.getElementById('sizeEan').focus();
+        return;
+    }
+    
+    const formData = new FormData(this);
+    
+    fetch(this.action, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Size form modalı kapat
+            const sizeModal = bootstrap.Modal.getInstance(document.getElementById('sizeFormModal'));
+            sizeModal.hide();
+            
+            // Option detail'ı yenile
+            const model = document.getElementById('currentOptionModel')?.value;
+            const color = document.getElementById('currentOptionColor')?.value;
+            
+            if (model && color) {
+                refreshOptionDetail(model, color);
+            }
+            
+            showToast(data.message, 'success');
+        } else {
+            showToast(data.message || 'Bir hata oluştu.', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Hata:', error);
+        showToast('Bir hata oluştu.', 'error');
+    });
+});
+</script>

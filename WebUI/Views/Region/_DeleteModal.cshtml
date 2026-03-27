@@ -1,0 +1,31 @@
+@model Core.Dtos.RegionDto
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" style="background: #fff3cd; border-bottom: 1px solid #ffc107;">
+                <h5 class="modal-title" id="deleteModalLabel" style="color: #856404;">
+                    <i class="fas fa-exclamation-triangle"></i>Silme Onayı
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 40px;">
+                <div class="delete-modal-icon">
+                    <i class="fas fa-trash"></i>
+                </div>
+                <div class="delete-modal-message">
+                    <strong>@Model?.Name</strong> bölgesini silmek istediğinizden emin misiniz?<br>
+                    <small style="color: #999;">Bu işlem geri alınamaz.</small>
+                </div>
+                <input type="hidden" id="deleteRegionId" value="@Model?.Id" />
+            </div>
+            <div class="modal-footer" style="background: #f8f9fa;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-danger" id="btnConfirmDelete" onclick="confirmDeleteRegion()">
+                    <i class="fas fa-check me-2"></i>Evet, Sil
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

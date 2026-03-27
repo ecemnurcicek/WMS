@@ -1,0 +1,15 @@
+{
+  "name": "wms-webui",
+  "version": "1.0.0",
+  "description": "WMS Web UI",
+  "main": "index.js",
+  "dependencies": {
+    "bootstrap": "^5.3.3",
+    "@fortawesome/fontawesome-free": "^6.6.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "install-libs": "npm install",
+    "copy-libs": "xcopy node_modules\\bootstrap\\dist wwwroot\\lib\\bootstrap\\dist /Y /I /E && xcopy node_modules\\@fortawesome\\fontawesome-free\\css wwwroot\\lib\\font-awesome\\css /Y /I /E && xcopy node_modules\\@fortawesome\\fontawesome-free\\webfonts wwwroot\\lib\\font-awesome\\webfonts /Y /I /E"
+  }
+}

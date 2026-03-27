@@ -1,0 +1,61 @@
+@model Core.Dtos.TransferDto
+@{
+    var userId = ViewBag.UserId as int? ?? 0;
+}
+
+<!-- Delete Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteModalTitle">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Transfer İptali
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="deleteTransferId" value="@Model.Id" />
+                <input type="hidden" id="deleteUserId" value="@userId" />
+                
+                <div class="alert alert-warning">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Bu işlem transferi iptal edecektir. Transfer durumu "İptal Edildi" olarak güncellenecektir.
+                </div>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-3 text-muted">İptal edilecek transfer bilgileri:</h6>
+                        <table class="table table-sm table-borderless mb-0">
+                            <tr>
+                                <th style="width: 130px;">Transfer Kodu:</th>
+                                <td><code>@Model.Name</code></td>
+                            </tr>
+                            <tr>
+                                <th>Talep Eden:</th>
+                                <td>@Model.FromShopName <small class="text-muted">(@Model.FromBrandName)</small></td>
+                            </tr>
+                            <tr>
+                                <th>Gönderen:</th>
+                                <td>@Model.ToShopName <small class="text-muted">(@Model.ToBrandName)</small></td>
+                            </tr>
+                            <tr>
+                                <th>Ürün Sayısı:</th>
+                                <td><span class="badge bg-info">@Model.DetailCount ürün</span></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <p class="mt-3 mb-0 text-center">
+                    <strong>Bu transferi iptal etmek istediğinizden emin misiniz?</strong>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn" onclick="confirmDeleteTransfer()">
+                    <i class="fas fa-times me-2"></i>İptal Et
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

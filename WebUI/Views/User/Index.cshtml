@@ -1,0 +1,220 @@
+@model IEnumerable<Core.Dtos.UserDto>
+
+@{
+    ViewData["Title"] = "Kullanıcı Yönetimi";
+    Layout = "_Layout";
+}
+
+<link rel="stylesheet" href="~/css/users.css" asp-append-version="true" />
+<script src="~/js/user.js" asp-append-version="true"></script>
+
+<div class="page-container users-container">
+    <!-- Header -->
+    <div class="page-header users-header">
+        <h1 class="page-heading">
+            <i class="fas fa-users me-3"></i>Kullanıcı Yönetimi
+        </h1>
+        <div class="header-info">
+            <button class="btn btn-primary" id="btnAddUser">
+                <i class="fas fa-user-plus me-2"></i>Yeni Kullanıcı Ekle
+            </button>
+        </div>
+    </div>
+
+    <!-- Search / Filter -->
+    <div class="users-filter-bar">
+        <div class="search-box">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="txtSearch" class="form-control" placeholder="Ad, e-posta, telefon veya mağaza ile ara..." />
+        </div>
+        <div class="filter-group">
+            <select id="filterRole" class="form-select">
+                <option value="">Tüm Roller</option>
+                @{
+                    var roles = Model.Select(u => u.RoleName).Where(r => !string.IsNullOrEmpty(r)).Distinct().OrderBy(r => r);
+                    foreach (var role in roles)
+                    {
+                        <option value="@role">@role</option>
+                    }
+                }
+            </select>
+            <select id="filterStatus" class="form-select">
+                <option value="">Tüm Durumlar</option>
+                <option value="active">Aktif</option>
+                <option value="passive">Pasif</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="table-wrapper users-table-wrapper">
+        @if (Model.Any())
+        {
+            <table class="table table-hover users-table">
+                <thead class="table-header-style">
+                    <tr>
+                        <th>#</th>
+                        <th>Ad Soyad</th>
+                        <th>E-posta</th>
+                        <th>Telefon</th>
+                        <th>Mağaza</th>
+                        <th>Marka</th>
+                        <th>Rol</th>
+                        <th>Kayıt Tarihi</th>
+                        <th>Durum</th>
+                        <th class="action-column">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    @{ int rowIndex = 1; }
+                    @foreach (var u in Model)
+                    {
+                        <tr data-user-id="@u.Id"
+                            data-name="@u.Name?.ToLower()"
+                            data-email="@u.Email?.ToLower()"
+                            data-phone="@u.Phone?.ToLower()"
+                            data-shop="@u.ShopName?.ToLower()"
+                            data-role="@u.RoleName"
+                            data-status="@(u.IsActive ? "active" : "passive")">
+                            <td>@rowIndex</td>
+                            <td class="user-name-cell">
+                                <div class="user-avatar">
+                                    @(u.Name?.Length > 0 ? u.Name[0].ToString().ToUpper() : "?")
+                                </div>
+                                <span>@u.Name</span>
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(u.Email))
+                                {
+                                    <span class="email-text"><i class="fas fa-envelope me-1 text-muted"></i>@u.Email</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(u.Phone))
+                                {
+                                    <span><i class="fas fa-phone me-1 text-muted"></i>@u.Phone</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(u.ShopName))
+                                {
+                                    <span class="shop-badge">@u.ShopName</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(u.BrandName))
+                                {
+                                    <span class="brand-badge">@u.BrandName</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(u.RoleName))
+                                {
+                                    <span class="role-badge">@u.RoleName</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Rol Yok</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="date-text">@u.CreateAt.ToString("dd.MM.yyyy")</span>
+                            </td>
+                            <td>
+                                @if (u.IsActive)
+                                {
+                                    <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>Aktif</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary"><i class="fas fa-times-circle me-1"></i>Pasif</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn btn-edit btn-sm" onclick="editUser(@u.Id)">
+                                        <i class="fas fa-edit"></i> Düzenle
+                                    </button>
+                                    <button class="btn btn-delete btn-sm" onclick="deleteUser(@u.Id)">
+                                        <i class="fas fa-trash"></i> Sil
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        rowIndex++;
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="fas fa-users-slash"></i>
+                <p>Henüz kullanıcı bulunmamaktadır</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Form Modal Container -->
+<div id="userFormModalContainer"></div>
+
+<!-- Delete Modal Container -->
+<div id="userDeleteModalContainer"></div>
+
+@section Scripts {
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const searchInput = document.getElementById('txtSearch');
+        const filterRole = document.getElementById('filterRole');
+        const filterStatus = document.getElementById('filterStatus');
+        const rows = document.querySelectorAll('#usersTableBody tr');
+
+        function applyFilters() {
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const selectedRole = filterRole.value;
+            const selectedStatus = filterStatus.value;
+
+            rows.forEach(row => {
+                const name = row.dataset.name || '';
+                const email = row.dataset.email || '';
+                const phone = row.dataset.phone || '';
+                const shop = row.dataset.shop || '';
+                const role = row.dataset.role || '';
+                const status = row.dataset.status || '';
+
+                const matchesSearch = !searchTerm ||
+                    name.includes(searchTerm) ||
+                    email.includes(searchTerm) ||
+                    phone.includes(searchTerm) ||
+                    shop.includes(searchTerm);
+
+                const matchesRole = !selectedRole || role === selectedRole;
+                const matchesStatus = !selectedStatus || status === selectedStatus;
+
+                row.style.display = (matchesSearch && matchesRole && matchesStatus) ? '' : 'none';
+            });
+        }
+
+        searchInput.addEventListener('input', applyFilters);
+        filterRole.addEventListener('change', applyFilters);
+        filterStatus.addEventListener('change', applyFilters);
+    });
+</script>
+}

@@ -1,0 +1,138 @@
+@model Core.Dtos.WareHouseDto
+@{
+    var regions = ViewBag.Regions as IEnumerable<Core.Dtos.RegionDto> ?? new List<Core.Dtos.RegionDto>();
+    var cities = ViewBag.Cities as IEnumerable<Core.Dtos.CityDto> ?? new List<Core.Dtos.CityDto>();
+    var towns = ViewBag.Towns as IEnumerable<Core.Dtos.TownDto> ?? new List<Core.Dtos.TownDto>();
+    var shops = ViewBag.Shops as IEnumerable<Core.Dtos.ShopDto> ?? new List<Core.Dtos.ShopDto>();
+}
+
+<!-- Form Modal -->
+<div class="modal fade" id="formModal" tabindex="-1" aria-labelledby="formModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="formModalTitle">
+                    @if (Model?.Id > 0)
+                    {
+                        <text><i class="fas fa-edit me-2"></i>Depoyu Düzenle</text>
+                    }
+                    else
+                    {
+                        <text><i class="fas fa-plus me-2"></i>Yeni Depo Ekle</text>
+                    }
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="wareHouseForm">
+                <div class="modal-body">
+                    <input type="hidden" id="wareHouseId" name="Id" value="@(Model?.Id ?? 0)" />
+                    
+                    <!-- Bölge Seçimi -->
+                    <div class="form-group mb-3">
+                        <label for="wareHouseRegion">Bölge <span style="color: #dc3545;">*</span></label>
+                        <select id="wareHouseRegion" name="RegionId" class="form-control" required>
+                            <option value="">-- Bölge Seçiniz --</option>
+                            @foreach (var region in regions)
+                            {
+                                if (Model?.RegionId == region.Id)
+                                {
+                                    <option value="@region.Id" selected>@region.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@region.Id">@region.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Şehir Seçimi -->
+                    <div class="form-group mb-3">
+                        <label for="wareHouseCity">Şehir <span style="color: #dc3545;">*</span></label>
+                        <select id="wareHouseCity" name="CityId" class="form-control" required>
+                            <option value="">-- Önce Bölge Seçiniz --</option>
+                            @foreach (var city in cities)
+                            {
+                                if (Model?.CityId == city.Id)
+                                {
+                                    <option value="@city.Id" selected>@city.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@city.Id">@city.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <!-- İlçe Seçimi -->
+                    <div class="form-group mb-3">
+                        <label for="wareHouseTown">İlçe <span style="color: #dc3545;">*</span></label>
+                        <select id="wareHouseTown" name="TownId" class="form-control" required>
+                            <option value="">-- Önce Şehir Seçiniz --</option>
+                            @foreach (var town in towns)
+                            {
+                                if (Model?.TownId == town.Id)
+                                {
+                                    <option value="@town.Id" selected>@town.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@town.Id">@town.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Mağaza Seçimi -->
+                    <div class="form-group mb-3">
+                        <label for="wareHouseShop">Mağaza <span style="color: #dc3545;">*</span></label>
+                        <select id="wareHouseShop" name="ShopId" class="form-control" required>
+                            <option value="">-- Önce İlçe Seçiniz --</option>
+                            @foreach (var shop in shops)
+                            {
+                                if (Model?.ShopId == shop.Id)
+                                {
+                                    <option value="@shop.Id" selected>@shop.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@shop.Id">@shop.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Depo Adı -->
+                    <div class="form-group mb-3">
+                        <label for="wareHouseName">Depo Adı <span style="color: #dc3545;">*</span></label>
+                        <input type="text" id="wareHouseName" name="Name" class="form-control" placeholder="Depo adını girin" value="@(Model?.Name ?? string.Empty)" required>
+                    </div>
+
+                    <!-- Aktiflik Durumu -->
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input type="checkbox" id="wareHouseIsActive" name="IsActive" class="form-check-input" @(Model?.IsActive == true ? "checked" : "")>
+                            <label class="form-check-label" for="wareHouseIsActive">
+                                Aktif
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary" id="submitButton">
+                        @if (Model?.Id > 0)
+                        {
+                            <text>Güncelle</text>
+                        }
+                        else
+                        {
+                            <text>Ekle</text>
+                        }
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

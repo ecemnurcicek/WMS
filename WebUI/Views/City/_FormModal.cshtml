@@ -1,0 +1,78 @@
+@model Core.Dtos.CityDto
+@{
+    var regions = ViewBag.Regions as IEnumerable<Core.Dtos.RegionDto> ?? new List<Core.Dtos.RegionDto>();
+}
+
+<!-- Form Modal -->
+<div class="modal fade" id="formModal" tabindex="-1" aria-labelledby="formModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="formModalTitle">
+                    @if (Model?.Id > 0)
+                    {
+                        <text><i class="fas fa-edit me-2"></i>Şehri Düzenle</text>
+                    }
+                    else
+                    {
+                        <text><i class="fas fa-plus me-2"></i>Yeni Şehir Ekle</text>
+                    }
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="cityForm">
+                <div class="modal-body">
+                    <input type="hidden" id="cityId" name="Id" value="@(Model?.Id ?? 0)" />
+                    
+                    <!-- Region Seçimi -->
+                    <div class="form-group mb-3">
+                        <label for="cityRegion">Bölge <span style="color: #dc3545;">*</span></label>
+                        <select id="cityRegion" name="RegionId" class="form-control" required>
+                            <option value="">-- Bölge Seçiniz --</option>
+                            @foreach (var region in regions)
+                            {
+                                if (Model?.RegionId == region.Id)
+                                {
+                                    <option value="@region.Id" selected>@region.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@region.Id">@region.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Şehir Adı -->
+                    <div class="form-group mb-3">
+                        <label for="cityName">Şehir Adı <span style="color: #dc3545;">*</span></label>
+                        <input type="text" id="cityName" name="Name" class="form-control" placeholder="Şehir adını girin" value="@(Model?.Name ?? string.Empty)" required>
+                    </div>
+
+                    <!-- Aktiflik Durumu -->
+                    <div class="form-group">
+                        <div class="form-check">
+                            <input type="checkbox" id="cityIsActive" name="IsActive" class="form-check-input" @(Model?.IsActive == true ? "checked" : "")>
+                            <label class="form-check-label" for="cityIsActive">
+                                Aktif
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary" id="submitButton">
+                        @if (Model?.Id > 0)
+                        {
+                            <text>Güncelle</text>
+                        }
+                        else
+                        {
+                            <text>Ekle</text>
+                        }
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

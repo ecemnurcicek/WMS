@@ -1,0 +1,158 @@
+/* Entry Area Styles */
+.entry-area-container {
+    padding: 2rem;
+    background-color: #f8f9fa;
+    min-height: 100vh;
+}
+
+.entry-area-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.page-heading {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.header-info .badge {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.empty-icon {
+    font-size: 5rem;
+    color: #dee2e6;
+    margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+/* Table Styles */
+.entry-area-table-wrapper {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.entry-area-table {
+    margin-bottom: 0;
+}
+
+.table-header-style {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.table-header-style th {
+    padding: 1rem;
+    font-weight: 600;
+    border: none;
+}
+
+.entry-area-table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.entry-area-table tbody tr:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.entry-area-table td {
+    padding: 1rem;
+    vertical-align: middle;
+}
+
+/* Product Info */
+.product-info strong {
+    color: #2c3e50;
+    font-size: 1rem;
+}
+
+.product-info small {
+    font-size: 0.85rem;
+}
+
+/* Badges */
+.quantity-badge {
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+}
+
+/* Shelf Select & Button */
+.shelf-select {
+    border: 2px solid #e9ecef;
+    transition: border-color 0.2s;
+}
+
+.shelf-select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+}
+
+.btn-assign-shelf {
+    min-width: 40px;
+    transition: all 0.2s;
+}
+
+.btn-assign-shelf:hover {
+    transform: scale(1.1);
+}
+
+.btn-assign-shelf:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Action Column */
+.action-column {
+    width: 250px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .entry-area-container {
+        padding: 1rem;
+    }
+
+    .entry-area-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .page-heading {
+        font-size: 1.5rem;
+    }
+
+    .entry-area-table-wrapper {
+        overflow-x: auto;
+    }
+
+    .entry-area-table {
+        min-width: 900px;
+    }
+}

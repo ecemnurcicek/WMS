@@ -1,0 +1,154 @@
+@model IEnumerable<Core.Dtos.EntryAreaItemDto>
+
+@{
+    ViewData["Title"] = "Giriş Alanı - Raf Ataması";
+    Layout = "_Layout";
+    var userRoles = ViewData["UserRoles"]?.ToString() ?? "";
+    var userShopId = ViewData["UserShopId"];
+    var userId = ViewData["UserId"];
+    var shelves = ViewBag.Shelves as List<Core.Dtos.ShelfDto> ?? new List<Core.Dtos.ShelfDto>();
+}
+
+<link rel="stylesheet" href="~/css/entry-area.css" asp-append-version="true" />
+
+<!-- Hidden data for JS -->
+<input type="hidden" id="currentUserId" value="@userId" />
+<input type="hidden" id="currentUserShopId" value="@userShopId" />
+
+<div class="page-container entry-area-container">
+    <!-- Header -->
+    <div class="page-header entry-area-header">
+        <h1 class="page-heading">
+            <i class="fas fa-warehouse me-3"></i>Giriş Alanı - Raf Ataması
+        </h1>
+        <div class="header-info">
+            <span class="badge bg-info">
+                <i class="fas fa-box me-1"></i>
+                Toplam @Model.Count() Ürün Bekliyor
+            </span>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <i class="fas fa-inbox empty-icon"></i>
+            <h3>Raf Ataması Bekleyen Ürün Yok</h3>
+            <p class="text-muted">Mağazanıza gelen ve kabul edilen ürünler burada görünecektir.</p>
+        </div>
+    }
+    else
+    {
+        <div class="entry-area-table-wrapper">
+            <table class="table table-hover entry-area-table">
+                <thead class="table-header-style">
+                    <tr>
+                        <th>Transfer ID</th>
+                        <th>Ürün Bilgisi</th>
+                        <th>EAN</th>
+                        <th>Miktar</th>
+                        <th>Gönderen Mağaza</th>
+                        <th>Gönderen Raf</th>
+                        <th>Kabul Tarihi</th>
+                        <th class="action-column">Raf Ata</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr data-transfer-detail-id="@item.TransferDetailId" data-product-id="@item.ProductId">
+                            <td>
+                                <span class="badge bg-secondary">#@item.TransferId</span>
+                            </td>
+                            <td>
+                                <div class="product-info">
+                                    <strong>@item.ProductModel</strong><br />
+                                    <small class="text-muted">
+                                        Renk: @item.ProductColor | Beden: @item.ProductSize
+                                    </small>
+                                </div>
+                            </td>
+                            <td>
+                                <code>@item.ProductEan</code>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary quantity-badge">@item.QuantitySent Adet</span>
+                            </td>
+                            <td>@item.FromShopName</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.FromShelfName))
+                                {
+                                    <span class="badge bg-info">@item.FromShelfName</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">-</span>
+                                }
+                            </td>
+                            <td>@item.ReceivedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>
+                                <div class="d-flex gap-2 align-items-center">
+                                    <select class="form-select form-select-sm shelf-select" 
+                                            data-transfer-detail-id="@item.TransferDetailId"
+                                            data-product-id="@item.ProductId"
+                                            data-quantity="@item.QuantitySent"
+                                            style="width: 150px;">
+                                        <option value="">Raf Seçin</option>
+                                        @foreach (var shelf in shelves)
+                                        {
+                                            <option value="@shelf.Id">@shelf.Code</option>
+                                        }
+                                    </select>
+                                    <button class="btn btn-sm btn-success btn-assign-shelf"
+                                            data-transfer-detail-id="@item.TransferDetailId"
+                                            data-product-id="@item.ProductId"
+                                            data-quantity="@item.QuantitySent">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<!-- Success/Error Toast -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="successToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas fa-check-circle me-2"></i><span id="successMessage"></span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+    <div id="errorToast" class="toast align-items-center text-white bg-danger border-0" role="alert">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas fa-exclamation-circle me-2"></i><span id="errorMessage"></span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/entry-area.js" asp-append-version="true"></script>
